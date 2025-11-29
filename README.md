@@ -1,4 +1,4 @@
-<img width="600" height="131" alt="68747470733a2f2f70616e2e73616d7979632e6465762f732f56596d4d5845" src="https://github.com/user-attachments/assets/a76ff045-eec6-4520-9e74-cc4ec6e2953c" />
+<div align="center"><h1><img width="600" height="131" alt="68747470733a2f2f70616e2e73616d7979632e6465762f732f56596d4d5845" src="https://github.com/user-attachments/assets/d0316faa-c2d0-478f-a642-1e3c3651f1d4" /></h1></div>
 
 <div class="section">
 <div align="center"><h1>ZombieRiot for Swiftly2</h1></div>
@@ -13,6 +13,7 @@
 
 
 📦 创意工坊示例（Zombie 模型/音效等）
+
 
 插件可结合以下创意工坊资源使用（示例）：
 
