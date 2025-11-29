@@ -289,6 +289,29 @@ After finishing the final stage, the plugin randomly selects the next map based 
 
 🧱 Stage Configuration Example
 ```
+"ZriotDayCFG": {
+  "Days": [
+    {
+      "DayName": "第1天",
+      "Count": 5,
+      "HealthBoost": 0,
+      "BeforeZombie": 0,
+      "Storyline": "故事线1",
+      "ZombieOverride": "Zombienormal1,Zombienormal2"
+    },
+    {
+      "DayName": "第2天",
+      "Count": 10,
+      "HealthBoost": 0,
+      "BeforeZombie": 0,
+      "Storyline": "故事线1",
+      "ZombieOverride": "Zombienormal1,Zombienormal2"
+    }
+  ]
+}
+```
+🧟 Zombie Configuration Example
+```
 "ZriotZombieCFG": {
   "ZombieList": [
     {
