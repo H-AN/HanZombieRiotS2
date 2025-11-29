@@ -1,0 +1,71 @@
+{
+  "ZriotDayCFG": {
+    "Days": [
+      {
+        "DayName": "第1天-高难度",
+        "Count": 5,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "Zombienormal1,Zombienormal2"
+      },
+      {
+        "DayName": "第2天-高难度",
+        "Count": 10,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "Zombienormal1,Zombienormal2"
+      },
+      {
+        "DayName": "第3天-高难度",
+        "Count": 15,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "ZombieLight,ZombieHeavy"
+      },
+      {
+        "DayName": "第4天-高难度",
+        "Count": 20,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "Zombiemother,Zombiepolice"
+      },
+      {
+        "DayName": "第5天-高难度",
+        "Count": 25,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "Zombiesherif,zombiebomb"
+      },
+      {
+        "DayName": "第6天-高难度",
+        "Count": 30,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "zombief,zombierange"
+      },
+      {
+        "DayName": "第7天-高难度",
+        "Count": 35,
+        "HealthBoost": 10000,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": ""
+      },
+	  {
+        "DayName": "第8天-高难度",
+        "Count": 10,
+        "HealthBoost": 10000,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": ""
+      }
+	  
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "ZriotDayCFG": {
+    "Days": [
+      {
+        "DayName": "第1天de_overpass",
+        "Count": 5,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1de_overpass",
+        "ZombieOverride": "Zombienormal1,Zombienormal2"
+      },
+      {
+        "DayName": "第2天de_overpass",
+        "Count": 10,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1de_overpass",
+        "ZombieOverride": "Zombienormal1,Zombienormal2"
+      },
+      {
+        "DayName": "第3天de_overpass",
+        "Count": 15,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1de_overpass",
+        "ZombieOverride": "ZombieLight,ZombieHeavy"
+      },
+      {
+        "DayName": "第4天de_overpass",
+        "Count": 20,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1de_overpass",
+        "ZombieOverride": "Zombiemother,Zombiepolice"
+      },
+      {
+        "DayName": "第5天de_overpass",
+        "Count": 25,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1de_overpass",
+        "ZombieOverride": "Zombiesherif,zombiebomb"
+      },
+      {
+        "DayName": "第6天de_overpass",
+        "Count": 30,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1de_overpass",
+        "ZombieOverride": "zombief,zombierange"
+      },
+      {
+        "DayName": "第7天de_overpass",
+        "Count": 3,
+        "HealthBoost": 10000,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1de_overpass",
+        "ZombieOverride": ""
+      }
+    ]
+  }
+}

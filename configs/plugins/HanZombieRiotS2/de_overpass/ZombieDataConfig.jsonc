@@ -1,0 +1,162 @@
+{
+  "ZriotZombieCFG": {
+    "ZombieList": [
+      {
+        "Name": "ZombieLight",
+        "Model": "characters/models/hoshistar/zombiezeta/mutation_light/mutation_light.vmdl",
+        "Health": 150,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "ZombieHeavy",
+        "Model": "characters/models/hoshistar/zombiezeta/mutation_heavy/mutation_heavy.vmdl",
+        "Health": 450,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "Zombienormal1",
+        "Model": "characters/models/hoshistar/zombiezeta/normal_m_01/normal_m_01.vmdl",
+        "Health": 110,
+        "Speed": 1.0,
+        "Damage": 1000.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "Zombienormal2",
+        "Model": "characters/models/hoshistar/zombiezeta/normal_m_02/normal_m_02.vmdl",
+        "Health": 80,
+        "Speed": 1.0,
+        "Damage": 50.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "Zombienormal3",
+        "Model": "characters/models/s2ze/bsi_zombie/zombie_bsi.vmdl",
+        "Health": 120,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "Zombienormal4",
+        "Model": "characters/models/s2ze/chris_walker/chris_walker.vmdl",
+        "Health": 280,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "Zombiemother",
+        "Model": "characters/models/hoshistar/zombiezeta/normalhost/normalhost.vmdl",
+        "Health": 300,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "Zombiepolice",
+        "Model": "characters/models/hoshistar/zombiezeta/police/police.vmdl",
+        "Health": 200,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "Zombiesherif",
+        "Model": "characters/models/hoshistar/zombiezeta/sherif/sherif.vmdl",
+        "Health": 150,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "zombiebomb",
+        "Model": "characters/models/hoshistar/zombiezeta/zombie_bomb/zombie_bomb.vmdl",
+        "Health": 180,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "zombief",
+        "Model": "characters/models/hoshistar/zombiezeta/zombie_f/zombie_f.vmdl",
+        "Health": 75,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      },
+      {
+        "Name": "zombierange",
+        "Model": "characters/models/hoshistar/zombiezeta/zombie_range/zombie_range.vmdl",
+        "Health": 500,
+        "Speed": 1.0,
+        "Damage": 1.0,
+        "Gravity": 1.0,
+        "HealthRevive": 1,
+        "HealthReviveSec": 1.0,
+        "HealthReviveHp": 1,
+        "Percent": 10,
+        "ZombieScale": 1.0
+      }
+    ]
+  }
+}

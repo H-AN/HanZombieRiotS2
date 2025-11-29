@@ -1,0 +1,62 @@
+{
+  "ZriotDayCFG": {
+    "Days": [
+      {
+        "DayName": "第1天",
+        "Count": 5,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "Zombienormal1,Zombienormal2"
+      },
+      {
+        "DayName": "第2天",
+        "Count": 10,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "Zombienormal1,Zombienormal2"
+      },
+      {
+        "DayName": "第3天",
+        "Count": 15,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "ZombieLight,ZombieHeavy"
+      },
+      {
+        "DayName": "第4天",
+        "Count": 20,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "Zombiemother,Zombiepolice"
+      },
+      {
+        "DayName": "第5天",
+        "Count": 25,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "Zombiesherif,zombiebomb"
+      },
+      {
+        "DayName": "第6天",
+        "Count": 30,
+        "HealthBoost": 0,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": "zombief,zombierange"
+      },
+      {
+        "DayName": "第7天",
+        "Count": 3,
+        "HealthBoost": 10000,
+        "BeforeZombie": 0,
+        "Storyline": "故事线1",
+        "ZombieOverride": ""
+      }
+    ]
+  }
+}
