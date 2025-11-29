@@ -16,13 +16,20 @@
 
 
 插件可结合以下创意工坊资源使用（示例）：
+3474477701  3450081072 3603675956 
+```
+要使用创意工坊资源,需要服务器安装metamod插件 multiaddonmanager 来管理服务器和玩家使用下载和安装创意工坊资源
 
-3474477701                                      要使用创意工坊资源,需要服务器安装metamod插件 multiaddonmanager 来管理服务器和玩家使用下载和安装创意工坊资源
-
-3450081072                                      安装multiaddonmanager插件后 在game\csgo\cfg\multiaddonmanager\multiaddonmanager.cfg配置文件中
+安装multiaddonmanager插件后 在game\csgo\cfg\multiaddonmanager\multiaddonmanager.cfg配置文件中
  
-3603675956                                      找到第一行 mm_extra_addons 				"3474477701,3450081072,3603675956" 把资源ID填写上去 等待服务器下载资源完毕 玩家进服会自动下载资源
+找到第一行 mm_extra_addons  "3474477701,3450081072,3603675956"
 
+把资源ID填写上去 等待服务器下载资源完毕 玩家进服会自动下载资源
+
+之后用 Source2Viewer 软件 打开资源包 查看资源内的 模型路径与soundevent名字
+
+之后根据需要填写到僵尸暴动插件内使用
+```
 ---
 
 🧩 插件功能特色
@@ -219,12 +226,26 @@ WorkShopMapConfig.jsonc	仅工坊地图 ID
 📦 Workshop Examples (Zombie models / sounds)
 
 You may use the plugin with the following workshop resources:
+3474477701  3450081072 3603675956 
+```
+To use Workshop resources, your server must install the Metamod plugin: multiaddonmanager
 
-3474477701
+which handles downloading and installing Workshop addons for both the server and players.
+ 
+After installing the multiaddonmanager plugin, open the configuration file:
 
-3450081072
+game\csgo\cfg\multiaddonmanager\multiaddonmanager.cfg
 
-3603675956
+Locate the first line: mm_extra_addons  "3474477701,3450081072,3603675956"
+
+Add the Workshop IDs you want to use, then wait for the server to finish downloading the addons.
+
+When players join the server, the required Workshop content will be downloaded automatically.
+
+Afterwards, use Source2Viewer to open the downloaded workshop package to find the model paths and soundevent names.
+
+Finally, fill in the required paths and soundevent names in the Zombie Riot plugin configuration as needed.
+```
 
 ---
 
