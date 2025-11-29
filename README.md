@@ -1,8 +1,13 @@
+<img width="600" height="131" alt="68747470733a2f2f70616e2e73616d7979632e6465762f732f56596d4d5845" src="https://github.com/user-attachments/assets/a76ff045-eec6-4520-9e74-cc4ec6e2953c" />
+
 
 ZombieRiot for Swiftly2
 
-基于 Swiftly2 框架 开发的 CS2 僵尸暴动（Zombie Riot）游戏模式插件。
+
+基于 Swiftly2 框架开发的 CS2 僵尸暴动（Zombie Riot）游戏模式插件。
+
 支持 PVPVE 玩法：人类 VS 丧尸（Bot 或玩家）。
+
 高性能、配置灵活、易扩展。
 
 📦 创意工坊示例（Zombie 模型/音效等）
@@ -169,13 +174,14 @@ WorkShopMapConfig.jsonc	仅工坊地图 ID
 }
 ```
 
-注：ZombieScale 目前有 bug，暂不推荐使用。
+注：ZombieScale 目前有 bug，暂无此功能。
 
-🇺🇸 English Version README
 ZombieRiot for Swiftly2
 
 A CS2 Zombie Riot game mode plugin built on the Swiftly2 framework.
+
 Supports PVPVE gameplay: Humans VS Zombies (bots or players).
+
 High performance, fully configurable, and highly extensible.
 
 📦 Workshop Examples (Zombie models / sounds)
