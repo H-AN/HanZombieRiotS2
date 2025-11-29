@@ -23,6 +23,8 @@
 
 3603675956
 
+---
+
 🧩 插件功能特色
 
 支持 多关卡 PVE 玩法
@@ -39,9 +41,11 @@ HUD 与伤害显示可供玩家切换
 
 完整管理员控制指令
 
+---
+
 🛠 管理员指令（Admin Commands）
 
-指令	说明
+指令说明
 
 !zriot_next	直接跳到下一关
 
@@ -53,19 +57,29 @@ HUD 与伤害显示可供玩家切换
 
 !zriot_zombie 玩家名	将某玩家设置为丧尸队伍（需完整玩家名）
 
+
+---
+
+
 🎮 玩家指令（Player Commands）
 
-指令	说明
+指令说明
 
 !zriot_hud	开启/关闭中心 HUD 显示
 
 !zriot_dmg	开启/关闭中心伤害显示
 
+---
+
 ⚙️ 配置文件说明
+
+---
 
 📁 主配置（必须）
 
-文件	说明
+---
+
+文件说明
 
 HanZriotCFG.jsonc	插件的主要配置文件
 
@@ -75,11 +89,15 @@ ZombieDataConfig.jsonc	丧尸属性配置（普通难度）
 
 🔥 高难度配置（污染浓度 100% 后使用）
 
-文件	说明
+---
+
+文件说明
 
 HanZriotDayConfig_hight.jsonc	高难度关卡配置
 
 ZombieDataConfig_hight.jsonc	高难度丧尸属性配置
+
+---
 
 🗺 地图配置（可选）
 
@@ -93,11 +111,15 @@ ZombieDataConfig_hight.jsonc	高难度丧尸属性配置
 
 插件会自动检测是否存在专属地图配置并优先读取。
 
+---
+
 🔄 地图轮换配置（mapsconfig）
 
 mapsconfig 文件夹包含：
 
-文件	说明
+---
+
+文件说明
 
 MapConfig.jsonc	仅官方地图
 
@@ -107,7 +129,9 @@ WorkShopMapConfig.jsonc	仅工坊地图 ID
 
 主配置中的 useworkshopmap 决定启用哪个：
 
-值	地图轮换方式
+---
+
+值/地图轮换方式
 
 0	仅使用官方地图（MapConfig.jsonc）
 
@@ -180,11 +204,17 @@ WorkShopMapConfig.jsonc	仅工坊地图 ID
 注：ZombieScale 目前有 bug，此功能暂时无效。
 
 
+---
+
+
+
 <div align="center"><strong>A CS2 Zombie Riot game mode plugin built on the Swiftly2 framework.</p></div>
 
 <div align="center"><strong>Supports PVPVE gameplay: Humans VS Zombies (bots or players).</p></div>
 
 <div align="center">High performance, fully configurable, and highly extensible.</p></div>
+
+---
 
 📦 Workshop Examples (Zombie models / sounds)
 
@@ -195,6 +225,8 @@ You may use the plugin with the following workshop resources:
 3450081072
 
 3603675956
+
+---
 
 🧩 Features
 
@@ -212,6 +244,8 @@ HUD & damage indicators toggleable by players
 
 Full admin control command set
 
+---
+
 🛠 Admin Commands
 
 Command	Description
@@ -226,6 +260,8 @@ Command	Description
 
 !zriot_zombie playername	Move a player to the zombie team (exact name required)
 
+---
+
 🎮 Player Commands
 
 Command	Description
@@ -233,6 +269,8 @@ Command	Description
 !zriot_hud	Enable/disable center HUD
 
 !zriot_dmg	Enable/disable damage HUD
+
+---
 
 ⚙️ Configuration Files
 
@@ -248,11 +286,15 @@ ZombieDataConfig.jsonc	Zombie attribute configuration (normal difficulty)
 
 High-difficulty configs (activated at 100% contamination)
 
+---
+
 File	Description
 
 HanZriotDayConfig_hight.jsonc	High-difficulty stage config
 
 ZombieDataConfig_hight.jsonc	High-difficulty zombie config
+
+---
 
 🗺 Per-map Configuration
 
@@ -264,9 +306,13 @@ Put the stage and zombie configs inside it
 
 The plugin will automatically detect and load them.
 
+---
+
 🔄 Map Rotation (mapsconfig)
 
 The mapsconfig folder includes:
+
+---
 
 File	Description
 
