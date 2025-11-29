@@ -15,9 +15,10 @@
 
 并在 game\csgo\cfg\gamemode_casual.cfg 
 
-设置 mp_warmuptime 0 mp_freezetime 0
+设置 mp_warmuptime 0 mp_freezetime 0 
 
 设置 mp_t_default_secondary "" 不给丧尸队伍任何枪械让地上不会掉落更多格洛克
+
 ---
 
 📦 创意工坊示例（Zombie 模型/音效等）
@@ -236,9 +237,10 @@ It’s best to start the server with +game_type 0 +game_mode 0 and
 
 set the following in game\csgo\cfg\gamemode_casual.cfg:
 
-mp_warmuptime 0  and mp_freezetime 0
+mp_warmuptime 0  and mp_freezetime 0 
 
 mp_t_default_secondary ""  Do not give the zombie team any firearms so that no extra Glocks will drop on the ground.
+
 ---
 
 📦 Workshop Examples (Zombie models / sounds)
