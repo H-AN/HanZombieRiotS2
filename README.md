@@ -11,6 +11,12 @@
 </div>
   
 ---
+使用此插件 最好使用 +game_type 0 +game_mode 0 启动服务器 
+
+并在 game\csgo\cfg\gamemode_casual.cfg 
+
+设置 mp_warmuptime 0 mp_freezetime 0
+---
 
 📦 创意工坊示例（Zombie 模型/音效等）
 
@@ -221,6 +227,14 @@ WorkShopMapConfig.jsonc	仅工坊地图 ID
 
 <div align="center">High performance, fully configurable, and highly extensible.</p></div>
 
+---
+
+---
+It’s best to start the server with +game_type 0 +game_mode 0 and 
+
+set the following in game\csgo\cfg\gamemode_casual.cfg:
+
+mp_warmuptime 0  and mp_freezetime 0
 ---
 
 📦 Workshop Examples (Zombie models / sounds)
