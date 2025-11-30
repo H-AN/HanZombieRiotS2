@@ -19,6 +19,10 @@
 
 设置 mp_t_default_secondary "" 不给丧尸队伍任何枪械让地上不会掉落更多格洛克
 
+在 game\csgo\cfg\server.cfg 中  
+
+写入 bot_join_team T 和 mp_limitteams 0
+
 ---
 
 📦 创意工坊示例（Zombie 模型/音效等）
@@ -240,6 +244,10 @@ set the following in game\csgo\cfg\gamemode_casual.cfg:
 mp_warmuptime 0  and mp_freezetime 0 
 
 mp_t_default_secondary ""  Do not give the zombie team any firearms so that no extra Glocks will drop on the ground.
+
+set the following in game\csgo\cfg\server.cfg  
+
+bot_join_team T and mp_limitteams 0
 
 ---
 
