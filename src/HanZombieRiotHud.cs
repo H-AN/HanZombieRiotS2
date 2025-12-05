@@ -127,7 +127,7 @@ public class HanZriotHud
         var config = _dayConfig.GetConfig(); //CurrentValue;
 
         if (config.Days == null || config.Days.Count == 0)
-            throw new InvalidOperationException("[HUD] 配置未加载或 Day 列表为空");
+            throw new InvalidOperationException($"{_core.Localizer["ServerHudError"]}"); 
 
         if (riotDay < 1 || riotDay > config.Days.Count)
             riotDay = 1;

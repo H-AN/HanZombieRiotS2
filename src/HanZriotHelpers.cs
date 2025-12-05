@@ -39,11 +39,10 @@ public class HanZriotHelpers
         var config = _dayConfig.GetConfig();
 
         if (config.Days == null || config.Days.Count == 0)
-            throw new InvalidOperationException("[Zriot] 配置文件未加载或 Day 列表为空。");
+            throw new InvalidOperationException($"{_core.Localizer["NoDayData"]}");
 
         if (RiotDay <= 0 || RiotDay > config.Days.Count)
         {
-            _logger.LogWarning("[Zriot] RiotDay 值无效 ({RiotDay})，已重置为 1。", RiotDay);
             RiotDay = 1;
         }
 
@@ -149,7 +148,6 @@ public class HanZriotHelpers
             {
                 if (entity != null && entity.IsValid)
                 {
-                    _logger.LogInformation($"删除地图目标: {entity.Entity!.Name}");
                     entity.AcceptInput("Kill", 0, null, null);
                 }
                     
@@ -209,7 +207,7 @@ public class HanZriotHelpers
         // 文件不存在 → 使用默认地图
         if (!File.Exists(fullPath))
         {
-            _core.Logger.LogWarning($"未找到地图配置文件: {fullPath}");
+            _core.Logger.LogWarning($"{_core.Localizer["MapCfgError"]}: {fullPath}");
             FallbackToDefault();
             return;
         }
@@ -223,7 +221,7 @@ public class HanZriotHelpers
         // 如果配置为空 → 默认地图
         if (mapList.Count == 0)
         {
-            _core.Logger.LogWarning($"地图配置文件为空: {fullPath}");
+            _core.Logger.LogWarning($"{_core.Localizer["MapCfgEmpty"]}: {fullPath}");
             FallbackToDefault();
             return;
         }
@@ -234,7 +232,7 @@ public class HanZriotHelpers
         // 判断是 官图 OR 工坊地图
         bool isWorkshop = selected.All(char.IsDigit);
 
-        _logger.LogInformation($"随机选择地图: {selected} (Workshop: {isWorkshop})");
+        _logger.LogInformation($"{_core.Localizer["MapRandomSelect"]}: {selected} (Workshop: {isWorkshop})");
 
         // 执行更换地图
         _core.Scheduler.DelayBySeconds(1.0f, () =>
@@ -255,7 +253,7 @@ public class HanZriotHelpers
 
     private void FallbackToDefault()
     {
-        _core.Logger.LogWarning("使用默认地图：de_dust2");
+        _core.Logger.LogWarning($"{_core.Localizer["UseDefaultMap"]}：de_dust2");
         _core.Scheduler.DelayBySeconds(1.0f, () =>
         {
             _core.Engine.ExecuteCommand("changelevel de_dust2");
@@ -300,7 +298,7 @@ public class HanZriotHelpers
                 }
                 else
                 {
-                    _core.Logger.LogWarning($"[僵尸选择] 未找到配置中名为 {zombieName} 的僵尸！");
+                    _core.Logger.LogWarning($"{_core.Localizer["NoZombieByName", zombieName]}");
                 }
             }
         }
@@ -313,7 +311,7 @@ public class HanZriotHelpers
             }
             else
             {
-                _core.Logger.LogWarning("[僵尸选择] _ZriotZombieCFG 为 null！");
+                _core.Logger.LogWarning($"{_core.Localizer["ZombieCfgError"]}");
             }
         }
 
@@ -538,7 +536,7 @@ public class HanZriotHelpers
                         RespawnClient(controller);
                     });
                     _globals.DeathTime[player.PlayerID] = 0;
-                    player.SendMessage(MessageType.Chat, "[华仔] 你已复活!");
+                    player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["Spawned"]}");
                 }
                 else
                 {

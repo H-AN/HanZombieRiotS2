@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Mono.Cecil.Cil;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
@@ -125,7 +126,7 @@ public class HanZriotService
         }
         else
         {
-            _core.PlayerManager.SendMessage(MessageType.Chat, $"zombiesForLevel.Count ะกำฺ 0");
+            _core.Logger.LogError($"{_core.Localizer["NoZombieData"]}");
         }
 
     }

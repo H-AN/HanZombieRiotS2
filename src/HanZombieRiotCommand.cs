@@ -43,7 +43,6 @@ public class HanZriotCommands
         _core.Engine.ExecuteCommand("mp_ignore_round_win_conditions 1");
         _core.Engine.ExecuteCommand("mp_warmup_end 1");
         _core.Engine.ExecuteCommand("bot_join_after_player 1");
-        //_core.Engine.ExecuteCommand("bot_join_team T");
         _core.Engine.ExecuteCommand("sv_human_autojoin_team 1");
         _core.Engine.ExecuteCommand("mp_humanteam CT");
         _core.Engine.ExecuteCommand("bot_chatter off");
@@ -84,7 +83,7 @@ public class HanZriotCommands
         {
             if (commandLine.StartsWith("jointeam 2"))
             {
-                player.SendMessage(MessageType.Chat, $"[华仔] 无法加入僵尸队伍,只能加入CT队伍");
+                player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["JoinTMessage"]}"); 
                 return HookResult.Stop;
             }
             else if (commandLine.StartsWith("jointeam 3"))
@@ -99,7 +98,7 @@ public class HanZriotCommands
             }
             else if (commandLine.StartsWith("jointeam 1"))
             {
-                player.SendMessage(MessageType.Chat, $"[华仔] 无法加入观察者,只能加入CT队伍");
+                player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["JoinSMessage"]}");
                 return HookResult.Stop;
             }
 

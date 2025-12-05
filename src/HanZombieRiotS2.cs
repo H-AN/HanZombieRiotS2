@@ -12,7 +12,7 @@ namespace HanZombieRiotS2;
 
 [PluginMetadata(
     Id = "HanZombieRiotS2", 
-    Version = "2.0.0", 
+    Version = "2.1.0", 
     Name = "僵尸暴动 for Sw2/HanZombieRiotS2", 
     Author = "H-AN", 
     Description = "CS2僵尸暴动 SW2版本 CS2 zombieriot for SW2.")]
@@ -74,7 +74,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
         ZriotCFGMonitor.OnChange(newConfig =>
         {
             _ZriotCFG = newConfig;
-            Core.Logger.LogInformation("[僵尸暴动] ZriotCFG 配置文件已热重载并同步。");
+            Core.Logger.LogInformation($"{Core.Localizer["ServerCfgChange"]}"); 
         });
 
 
@@ -112,7 +112,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 
         if (ZombieList == null || ZombieList.Count == 0)
         {
-            Console.WriteLine("[H-AN] No zombie Data!");
+            Core.Logger.LogError($"{Core.Localizer["NoZombieData"]}");
             return;
         }
 
@@ -120,7 +120,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 
         if (Daycfg.Days == null || Daycfg.Days.Count == 0)
         {
-            Core.Logger.LogError("[僵尸暴动] 未检测到有效 Day 配置，无法初始化。");
+            Core.Logger.LogError($"{Core.Localizer["NoDayData"]}");
             return;
         }
 

@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SwiftlyS2.Shared;
@@ -430,14 +431,14 @@ public class HanZriotEvents
                             }
                             else
                             {
-                                Deather.SendMessage(MessageType.Chat, $"[华仔]你死亡了,{(int)_globals.RebornSec[Deather.PlayerID]} 秒后复活.");
+                                Deather.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(Deather)["DeathInfo", (int)_globals.RebornSec[Deather.PlayerID]]}");
                                 var now = Environment.TickCount;
                                 _globals.DeathTime[Deather.PlayerID] = now + ((int)_globals.RebornSec[Deather.PlayerID] * 1000);
                             }
                         }
                         else
                         {
-                            Deather.SendMessage(MessageType.Chat, $"[华仔]你死亡了,{(int)_globals.RebornSec[Deather.PlayerID]} 秒后复活.");
+                            Deather.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(Deather)["DeathInfo", (int)_globals.RebornSec[Deather.PlayerID]]}");
 
                             var now = Environment.TickCount;
                             _globals.DeathTime[Deather.PlayerID] = now + ((int)_globals.RebornSec[Deather.PlayerID] * 1000);
