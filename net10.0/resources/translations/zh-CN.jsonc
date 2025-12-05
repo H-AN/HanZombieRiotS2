@@ -26,6 +26,8 @@
 	"SpawnProtect": "你拥有{0}秒的重生保护!!",
 	"RemoveProtect": "你的重生保护已经结束!!",
 	"ReSpawn": "你将在 {0} 秒后复活!!!",
+	"Spawned": "你已经复活!!!",
+	"DeathInfo": "[僵尸暴动]你死亡了,{0} 秒后复活!!",
 	"ZombieDamage": "丧尸 {0} 攻击了玩家 {1}, 造成 {2} 额外伤害.",
 	"AdminNextDay": "管理员 {0}, 切换至下一天!!",
 	"AdminSetDayError1": "请输入正确指令 !zriot_setday (天数)",
@@ -33,6 +35,19 @@
 	"AdminSetDay": "管理员 {0} 将天数设置为 第 {1} 天!!",
 	"ForceJoinHuman": "你被管理员强制加入了人类队伍!!",
 	"ForceJoinZombie": "你被管理员强制加入了丧尸队伍!!",
-	"AdminSetDiff": "管理员 {0} 将污染浓度提升至 100％ !!"
+	"AdminSetDiff": "管理员 {0} 将污染浓度提升至 100％ !!",
+	"JoinTMessage": "[僵尸暴动]人类无法加入僵尸队伍,只能加入CT队伍!!",
+	"JoinSMessage": "[僵尸暴动]无法加入观察者,只能加入CT队伍!!",
+	"ServerHudError": "[僵尸暴动]HUD配置未加载或 Day 列表为空!!",
+	"ServerCfgChange": "[僵尸暴动]ZriotCFG 配置文件已热重载并同步!!",
+	"NoZombieData": "[僵尸暴动]未检测到有效的僵尸配置.",
+	"NoDayData": "[僵尸暴动]未检测到有效关卡配置",
+	"MapCfgError": "[僵尸暴动]未找到地图配置文件",
+	"MapCfgEmpty": "[僵尸暴动]地图配置文件为空",
+	"MapRandomSelect": "[僵尸暴动]随机选择地图",
+	"UseDefaultMap": "[僵尸暴动]使用默认地图",
+	"NoZombieByName": "[僵尸暴动]未找到配置中名为{0}的僵尸",
+	"ZombieCfgError": "[僵尸暴动]ZriotZombieCFG 为 null！"
+	
 	
 }

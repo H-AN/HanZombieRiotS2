@@ -26,6 +26,8 @@
 	"SpawnProtect": "You have {0} seconds of respawn protection!!",
 	"RemoveProtect": "Your respawn protection has ended!!",
 	"ReSpawn": "You will be resurrected in {0} seconds!!!",
+	"Spawned": "You Already Spawned!!!",
+	"DeathInfo": "[HZriot]You are dead, respawning in {0} seconds!!",
 	"ZombieDamage": "The zombie {0} attacked the player {1}, causing {2} damage.",
 	"AdminNextDay": "Administrator {0}, switch to the next day!!",
 	"AdminSetDayError1": "Please enter the correct command: !zriot_setday (number of days)",
@@ -33,6 +35,18 @@
 	"AdminSetDay": "The administrator {0} set the number of days to the {1} th day!!",
 	"ForceJoinHuman": "You were forcibly added to the human team by the admin!!",
 	"ForceJoinZombie": "You were forcibly added to the zombie team by the admin!!",
-	"AdminSetDiff": "Administrator {0} increased the difficulty to 100％!!"
+	"AdminSetDiff": "Administrator {0} increased the difficulty to 100％!!",
+	"JoinTMessage": "[HZriot]Humans cannot join the zombie team, they can only join the CT team!!",
+	"JoinSMessage": "[HZriot]They cannot join spectators; they can only join the CT team!!",
+	"ServerHudError": "[HZriot]HUD configuration not loaded or the Day list is empty!!",
+	"ServerCfgChange": "[HZriot]ZriotCFG configuration file has been hot-reloaded and synchronized!!",
+	"NoZombieData": "[HZriot]No valid zombie configuration detected.",
+	"NoDayData": "[HZriot]No valid level configuration detected",
+	"MapCfgError": "[HZriot]Map configuration file not found.",
+	"MapCfgEmpty": "[HZriot]Map configuration file is empty.",
+	"MapRandomSelect": "[HZriot]Randomly selecting a map.",
+	"UseDefaultMap": "[HZriot]Using the default map.",
+	"NoZombieByName": "[HZriot]No zombie named {0} found in the configuration.",
+	"ZombieCfgError": "[HZriot]ZriotZombieCFG is null！"
 
 }
