@@ -9,7 +9,13 @@
 <div align="center"><strong>支持 PVPVE 玩法：人类 VS 丧尸（Bot 或玩家）。</p></div>
 <div align="center"><strong>高性能、配置灵活、易扩展。</p></div>
 </div>
+
+<div align="center">
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z31PY52N)
   
+
+</div>
 ---
 使用此插件 最好使用 +game_type 0 +game_mode 0 启动服务器 
 
