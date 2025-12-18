@@ -467,7 +467,12 @@ public class HanZriotHelpers
 
     public void SetFreezeState(IPlayer player, bool freeze)
     {
-        if (!player.IsValid) return;
+        if (!player.IsValid) 
+            return;
+
+        var controller = player.Controller;
+        if (controller == null || !controller.IsValid)
+            return;
 
         var pawn = player.PlayerPawn;
         if (pawn == null || !pawn.IsValid) return;
@@ -485,6 +490,10 @@ public class HanZriotHelpers
         {
             if (!player.IsValid)
                 return;
+
+            var controller = player.Controller;
+            if (controller == null || !controller.IsValid)
+                continue;
 
             var pawn = player.PlayerPawn;
             if (pawn == null || !pawn.IsValid)
@@ -511,15 +520,18 @@ public class HanZriotHelpers
                 if (player == null || !player.IsValid)
                     continue;
 
+                if (!_core.PlayerManager.IsPlayerOnline(player.PlayerID))
+                    continue;
+
+                var controller = player.Controller;
+                if (controller == null || !controller.IsValid)
+                    continue;
+
                 var pawn = player.PlayerPawn;
                 if (pawn == null || !pawn.IsValid)
                     continue;
 
                 if (pawn.TeamNum != 3)
-                    continue;
-
-                var controller = player.Controller;
-                if (controller == null || !controller.IsValid)
                     continue;
 
                 int target = _globals.DeathTime[player.PlayerID];
@@ -617,7 +629,17 @@ public class HanZriotHelpers
                 if (player == null || !player.IsValid)
                     continue;
 
+                if (!_core.PlayerManager.IsPlayerOnline(player.PlayerID))
+                    continue;
+
                 if (player.IsFakeClient)
+                    continue;
+
+                var Controller = player.Controller;
+                if (Controller == null || !Controller.IsValid)
+                    continue;
+
+                if (!Controller.PawnIsAlive)
                     continue;
 
                 var pawn = player.PlayerPawn;
@@ -626,13 +648,6 @@ public class HanZriotHelpers
 
                 if(pawn.TeamNum != 3)
                     continue;
-
-                var Controller = player.Controller;
-                if (Controller == null || !Controller.IsValid)
-                    continue;
-
-                if (!Controller.PawnIsAlive)
-                    continue; 
 
                 _hud.Show(player); 
             }
