@@ -7,6 +7,7 @@ using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
 
 namespace HanZombieRiotS2;
+
 public class HanZriotCommands
 {
     private readonly ILogger<HanZriotCommands> _logger;
@@ -71,7 +72,8 @@ public class HanZriotCommands
         _core.Command.RegisterCommand("sw_zriot_dmg", ShowOrCloseDmghud, true);
     }
 
-    public void RegisterJoin(ICommandContext context){
+    public void RegisterJoin(ICommandContext context)
+    {
     }
 
 
@@ -83,7 +85,7 @@ public class HanZriotCommands
         {
             if (commandLine.StartsWith("jointeam 2"))
             {
-                player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["JoinTMessage"]}"); 
+                player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["JoinTMessage"]}");
                 return HookResult.Stop;
             }
             else if (commandLine.StartsWith("jointeam 3"))
@@ -93,8 +95,8 @@ public class HanZriotCommands
                 {
                     _services.JoinTeamCheck(player);
                 });
-                
-                
+
+
             }
             else if (commandLine.StartsWith("jointeam 1"))
             {
@@ -104,20 +106,20 @@ public class HanZriotCommands
 
         }
 
-        
+
         return HookResult.Continue;
     }
 
-    
+
 
     public void NEXTDAY(ICommandContext context)
     {
         var player = context.Sender;
-        if (player == null || !player.IsValid) 
+        if (player == null || !player.IsValid)
             return;
 
         var Controller = player.Controller;
-        if (Controller == null || !Controller.IsValid) 
+        if (Controller == null || !Controller.IsValid)
             return;
         int maxDay = _dayConfig.GetConfig().Days.Count;
 
@@ -139,26 +141,26 @@ public class HanZriotCommands
     public void SETDAY(ICommandContext context)
     {
         var player = context.Sender;
-        if (player == null || !player.IsValid) 
+        if (player == null || !player.IsValid)
             return;
 
         var Controller = player.Controller;
-        if (Controller == null || !Controller.IsValid) 
+        if (Controller == null || !Controller.IsValid)
             return;
 
         int maxDay = _dayConfig.GetConfig().Days.Count;
         if (context.Args.Length < 1)
         {
-            player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDayError1"]}"); 
+            player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDayError1"]}");
             return;
         }
 
         if (!int.TryParse(context.Args[0], out int count) || count <= 0 || count > maxDay)
         {
-            player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDayError2"]}"); 
+            player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDayError2"]}");
             return;
         }
-            
+
 
         _globals.RiotDay = count;
         _helpers.TerminateRound(RoundEndReason.RoundDraw, 8.0f);
@@ -187,7 +189,7 @@ public class HanZriotCommands
         var Controller = player.Controller;
         if (Controller == null || !Controller.IsValid) return;
 
-        if(_globals.PlayerHud[player.PlayerID])
+        if (_globals.PlayerHud[player.PlayerID])
         {
             _globals.PlayerHud[player.PlayerID] = false;
         }
@@ -196,7 +198,7 @@ public class HanZriotCommands
             _globals.PlayerHud[player.PlayerID] = true;
             player.SendMessage(MessageType.CenterHTML, "");
         }
-        
+
 
     }
     public void ShowOrCloseDmghud(ICommandContext context)
@@ -215,7 +217,7 @@ public class HanZriotCommands
         {
             _globals.PlayerDmgHud[player.PlayerID] = true;
         }
-        
+
 
     }
 
@@ -229,7 +231,7 @@ public class HanZriotCommands
 
         if (context.Args.Length < 0)
             return;
-        
+
 
         string targetName = context.Args[0];
 
@@ -271,7 +273,7 @@ public class HanZriotCommands
 
         if (context.Args.Length < 0)
             return;
-        
+
 
         string targetName = context.Args[0];
 

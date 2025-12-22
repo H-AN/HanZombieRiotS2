@@ -8,6 +8,7 @@ using SwiftlyS2.Shared.SchemaDefinitions;
 
 
 namespace HanZombieRiotS2;
+
 public class HanZriotService
 {
     private readonly ILogger<HanZriotService> _logger;
@@ -34,7 +35,7 @@ public class HanZriotService
         _globals = globals;
     }
 
-    public void PossZombie(IPlayer client) //”¶”√Ω© ¨∏˜œÓ Ù–‘
+    public void PossZombie(IPlayer client) //Â∫îÁî®ÂÉµÂ∞∏ÂêÑÈ°πÂ±ûÊÄß
     {
         if (client == null || !client.IsValid)
             return;
@@ -51,24 +52,24 @@ public class HanZriotService
         var Dayconfig = _dayConfig.GetConfig(); //.CurrentValue;
 
         clientpawn.ItemServices!.GiveItem<CCSWeaponBase>("weapon_knife");
-        
+
 
         if (CFG.ZombieNoBlock)
         {
             _helpers.NoBlock(clientpawn);
         }
 
-        // ªÒ»°µ±«∞πÿø®µƒΩ© ¨ ˝æ›
-        var currentDay = _helpers.GetCurrentDay(_globals.RiotDay);// RiotDay ¥” 1 ø™ º
-        int currentDayIndex = Dayconfig.Days.IndexOf(currentDay); // ªÒ»°µ±«∞πÿø®µƒÀ˜“˝
-        var zombiesForLevel = _helpers.GetZombiesForCurrentLevel(currentDayIndex); // ¥´µ›À˜“˝
+        // Ëé∑ÂèñÂΩìÂâçÂÖ≥Âç°ÁöÑÂÉµÂ∞∏Êï∞ÊçÆ
+        var currentDay = _helpers.GetCurrentDay(_globals.RiotDay);// RiotDay ‰ªé 1 ÂºÄÂßã
+        int currentDayIndex = Dayconfig.Days.IndexOf(currentDay); // Ëé∑ÂèñÂΩìÂâçÂÖ≥Âç°ÁöÑÁ¥¢Âºï
+        var zombiesForLevel = _helpers.GetZombiesForCurrentLevel(currentDayIndex); // ‰º†ÈÄíÁ¥¢Âºï
 
 
 
-        // ÀÊª˙—°‘Ò“ª∏ˆΩ© ¨
+        // ÈöèÊú∫ÈÄâÊã©‰∏Ä‰∏™ÂÉµÂ∞∏
         if (zombiesForLevel.Count > 0)
         {
-            var randomZombie = zombiesForLevel[Random.Shared.Next(zombiesForLevel.Count)]; // ÀÊª˙—°‘Ò“ª∏ˆΩ© ¨
+            var randomZombie = zombiesForLevel[Random.Shared.Next(zombiesForLevel.Count)]; // ÈöèÊú∫ÈÄâÊã©‰∏Ä‰∏™ÂÉµÂ∞∏
 
             int maxhealth;
             if (currentDay.HealthBoost > 0)
@@ -80,21 +81,21 @@ public class HanZriotService
                 maxhealth = randomZombie.Health;
             }
 
-            clientpawn.SetModel(randomZombie.Model); // …Ë÷√ƒ£–Õ
-            // …Ë÷√ Ù–‘
+            clientpawn.SetModel(randomZombie.Model); // ËÆæÁΩÆÊ®°Âûã
+            // ËÆæÁΩÆÂ±ûÊÄß
             if (currentDay.HealthBoost > 0)
             {
-                
+
                 clientpawn.Health = randomZombie.Health + currentDay.HealthBoost;
                 clientpawn.HealthUpdated();
-                
+
             }
             else
             {
-                
+
                 clientpawn.Health = randomZombie.Health;
                 clientpawn.HealthUpdated();
-                
+
 
             }
             if (randomZombie.Speed > 0)
@@ -108,13 +109,13 @@ public class HanZriotService
 
             if (randomZombie.HealthRevive > 0)
             {
-                var now = Environment.TickCount / 1000f; 
+                var now = Environment.TickCount / 1000f;
                 _globals.g_ZombieRegenStates[client.PlayerID] = new ZombieRegenState
                 {
                     PlayerID = client.PlayerID,
                     RegenAmount = randomZombie.HealthReviveHp,
                     RegenInterval = randomZombie.HealthReviveSec,
-                    NextRegenTime = now + randomZombie.HealthReviveSec // œ¬“ª¥Œªÿ—™ ±º‰
+                    NextRegenTime = now + randomZombie.HealthReviveSec // ‰∏ã‰∏ÄÊ¨°ÂõûË°ÄÊó∂Èó¥
                 };
             }
 
@@ -247,7 +248,7 @@ public class HanZriotService
             if (player.IsValid)
             {
                 var pawn = player.PlayerPawn;
-                if (pawn!=null && pawn.IsValid)
+                if (pawn != null && pawn.IsValid)
                 {
                     if (pawn.TeamNum == 3)
                     {
@@ -263,13 +264,13 @@ public class HanZriotService
     }
 
 
-    public void FakeCtswin() 
+    public void FakeCtswin()
     {
         var CFG = _mainConfig.CurrentValue;
         var Dayconfig = _dayConfig.GetConfig();
         var currentDay = _helpers.GetCurrentDay(_globals.RiotDay);
 
-        int maxDay = Dayconfig.Days.Count; // ªÒ»°πÿø®◊‹ ˝
+        int maxDay = Dayconfig.Days.Count; // Ëé∑ÂèñÂÖ≥Âç°ÊÄªÊï∞
         _globals.GameStart = false;
 
         var allPlayers = _core.PlayerManager.GetAllPlayers();
@@ -332,7 +333,7 @@ public class HanZriotService
         var allPlayers = _core.PlayerManager.GetAllPlayers();
         foreach (var player in allPlayers)
         {
-            if (!player.IsFakeClient) // »À¿‡ÕÊº“
+            if (!player.IsFakeClient) // ‰∫∫Á±ªÁé©ÂÆ∂
             {
                 player.SendMessage(MessageType.CenterHTML, $"{_core.Translation.GetPlayerLocalizer(player)["ZombieWins"]}");
                 _globals.BeAZombie[player.PlayerID] = currentDay.BeforeZombie;
@@ -355,7 +356,7 @@ public class HanZriotService
 
     public void JoinTeamCheck(IPlayer player)
     {
-        
+
         var pawn = player.PlayerPawn;
         if (pawn == null || !pawn.IsValid)
             return;

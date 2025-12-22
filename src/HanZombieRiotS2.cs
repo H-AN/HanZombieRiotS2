@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,10 +11,10 @@ using SwiftlyS2.Shared.Plugins;
 namespace HanZombieRiotS2;
 
 [PluginMetadata(
-    Id = "HanZombieRiotS2", 
-    Version = "2.1.0", 
-    Name = "僵尸暴动 for Sw2/HanZombieRiotS2", 
-    Author = "H-AN", 
+    Id = "HanZombieRiotS2",
+    Version = "2.2.0",
+    Name = "僵尸暴动 for Sw2/HanZombieRiotS2",
+    Author = "H-AN",
     Description = "CS2僵尸暴动 SW2版本 CS2 zombieriot for SW2.")]
 public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 {
@@ -74,7 +74,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
         ZriotCFGMonitor.OnChange(newConfig =>
         {
             _ZriotCFG = newConfig;
-            Core.Logger.LogInformation($"{Core.Localizer["ServerCfgChange"]}"); 
+            Core.Logger.LogInformation($"{Core.Localizer["ServerCfgChange"]}");
         });
 
 
@@ -96,7 +96,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
         string mapname = @event.MapName;
 
         _ZriotDayCFG.Reload(difficulty, mapname);
-        _ZriotZombieCFG.Reload(difficulty, mapname); 
+        _ZriotZombieCFG.Reload(difficulty, mapname);
 
         if (_Globals.CurrentMapIsHighDiff)
         {
@@ -138,15 +138,4 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
 

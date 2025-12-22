@@ -4,7 +4,7 @@ namespace HanZombieRiotS2;
 
 public class HanZriotGlobals
 {
-    // ===== ÊıÖµÀà =====
+    // ===== æ•°å€¼ç±» =====
     public int NeedKillZombie { get; set; }
     public int ZombieKill { get; set; }
     public int RiotDay { get; set; }
@@ -12,13 +12,13 @@ public class HanZriotGlobals
     public int KillCount { get; set; }
     public float KillPercent { get; set; }
 
-    // ===== ²¼¶ûÀà =====
+    // ===== å¸ƒå°”ç±» =====
     public bool GameStart { get; set; }
     public bool HightDiff { get; set; } = false;
     public bool CurrentMapIsHighDiff { get; set; }
     public bool AllowHumanZombie { get; set; }
 
-    // ===== Êı×éÀà£¨Íæ¼Ò×´Ì¬£© =====
+    // ===== æ•°ç»„ç±»ï¼ˆç©å®¶çŠ¶æ€ï¼‰ =====
     public float[] RebornSec { get; } = new float[65];
     public int[] BeAZombie { get; } = new int[65];
     public int[] DeathTime { get; } = new int[65];
@@ -58,7 +58,7 @@ public class HanZriotGlobals
 public class ZombieRegenState
 {
     public int PlayerID;
-    public int RegenAmount;       // Ã¿´Î»ØÑªÁ¿
-    public float RegenInterval;   // ¼ä¸ôÃëÊı
-    public float NextRegenTime;   // ÏÂÒ»´Î»ØÑªÊ±¼ä´Á£¨Ãë£©
+    public int RegenAmount;       // æ¯æ¬¡å›è¡€é‡
+    public float RegenInterval;   // é—´éš”ç§’æ•°
+    public float NextRegenTime;   // ä¸‹ä¸€æ¬¡å›è¡€æ—¶é—´æˆ³ï¼ˆç§’ï¼‰
 }

@@ -9,6 +9,7 @@ using SwiftlyS2.Shared.Players;
 using SwiftlyS2.Shared.SchemaDefinitions;
 
 namespace HanZombieRiotS2;
+
 public class HanZriotEvents
 {
     private readonly ILogger<HanZriotEvents> _logger;
@@ -50,7 +51,7 @@ public class HanZriotEvents
         _core.GameEvent.HookPre<EventWeaponFire>(OnWeaponFire);
 
 
-        // Event ÏµÁĞ Hook
+        // Event ç³»åˆ— Hook
         _core.Event.OnPrecacheResource += Event_OnPrecacheResource;
         _core.Event.OnMapUnload += Event_MapEnd;
         _core.Event.OnClientDisconnected += Event_OnClientDisconnected;
@@ -74,10 +75,10 @@ public class HanZriotEvents
         if (pawn == null || !pawn.IsValid)
             return;
 
-        //½ûÖ¹³ıØ°Ê×ÍâµÄÎäÆ÷
+        //ç¦æ­¢é™¤åŒ•é¦–å¤–çš„æ­¦å™¨
         if (pawn.TeamNum == 2 && weaponName != null && weaponName != "weapon_knife")
         {
-            @event.SetResult(false); // ×èÖ¹Ê¹ÓÃ
+            @event.SetResult(false); // é˜»æ­¢ä½¿ç”¨
         }
     }
 
@@ -87,7 +88,7 @@ public class HanZriotEvents
     {
 
         var gameRules = _core.EntitySystem.GetGameRules();
-        if (gameRules is not { IsValid: true, WarmupPeriod: false }) 
+        if (gameRules is not { IsValid: true, WarmupPeriod: false })
             return;
 
         gameRules.GameRestart = gameRules.RestartRoundTime.Value < _core.Engine.GlobalVars.CurrentTime;
@@ -120,7 +121,7 @@ public class HanZriotEvents
         _globals.NeedKillZombie = currentDay.Count;
         _globals.ZombieKill = 0;
 
-        
+
         _globals.SpawnAllZombie?.Cancel();
         _globals.SpawnAllZombie = null;
         _globals.SpawnAllZombie = _core.Scheduler.DelayAndRepeatBySeconds(0.5f, 5.0f, () =>
@@ -128,8 +129,8 @@ public class HanZriotEvents
             _helpers.RespawnAllZombie();
         });
         _core.Scheduler.StopOnMapChange(_globals.SpawnAllZombie);
-        
-        
+
+
 
         _globals.g_DeathCheck?.Cancel();
         _globals.g_DeathCheck = null;
@@ -175,7 +176,7 @@ public class HanZriotEvents
                     continue;
 
                 if (!player.IsFakeClient)
-                    continue; // Ö»´¦ÀíÍæ¼Ò
+                    continue; // åªå¤„ç†ç©å®¶
 
                 var pawn = player.PlayerPawn;
                 if (pawn == null || !pawn.IsValid)
@@ -213,7 +214,7 @@ public class HanZriotEvents
                     if (_globals.Countdown > 0)
                     {
                         _helpers.SetFreezeState(player, true);
-                        _core.Scheduler.DelayBySeconds((float)_globals.Countdown, () => 
+                        _core.Scheduler.DelayBySeconds((float)_globals.Countdown, () =>
                         {
                             _helpers.SetFreezeState(player, false);
                         });
@@ -307,7 +308,7 @@ public class HanZriotEvents
 
             if (_globals.g_hCountdown == null)
             {
-                if(!_globals.PlayerDmgHud[attacker.PlayerID])
+                if (!_globals.PlayerDmgHud[attacker.PlayerID])
                 {
                     attacker.SendMessage(MessageType.Center, $"\n\n{_core.Translation.GetPlayerLocalizer(attacker)["Target", playerController.PlayerName, remainingHP]}");
                 }
@@ -378,7 +379,7 @@ public class HanZriotEvents
                     _core.Scheduler.DelayBySeconds(1.0f, () => { _helpers.RespawnClient(DeatherController); });
                     if (CFG.DeathMoney > 0)
                     {
-                        
+
                         var attacker = _core.PlayerManager.GetPlayer(attackerId);
                         if (attacker == null || !attacker.IsValid)
                             return;
@@ -450,9 +451,9 @@ public class HanZriotEvents
                 else
                 {
                     _core.Scheduler.DelayBySeconds(1.0f, () => { DeatherController.Respawn(); });
-                    
+
                 }
-                
+
 
             }
 
@@ -504,7 +505,7 @@ public class HanZriotEvents
                         {
                             if (clienpawn != null)
                             {
-                                _core.Scheduler.DelayBySeconds(0.2f, () => { _globals.InProtect[player.PlayerID] = true;});
+                                _core.Scheduler.DelayBySeconds(0.2f, () => { _globals.InProtect[player.PlayerID] = true; });
                             }
 
                             _globals.SpawnProtect[player.PlayerID]?.Cancel();
@@ -545,19 +546,19 @@ public class HanZriotEvents
 
 
             }
-            
+
             if (CFG.HumanNoBlock)
             {
                 var pawn = player.PlayerPawn;
                 if (pawn != null && pawn.IsValid)
                 {
-                    _core.Scheduler.NextTick( () => 
-                    { 
-                        _helpers.NoBlock(pawn); 
+                    _core.Scheduler.NextTick(() =>
+                    {
+                        _helpers.NoBlock(pawn);
                     });
                 }
             }
-            
+
         }
         else
         {
@@ -568,7 +569,7 @@ public class HanZriotEvents
             _core.Scheduler.DelayBySeconds(0.2f, () => _services.PossZombie(player));
             if (!_globals.GameStart)
             {
-                _core.Scheduler.DelayBySeconds(0.5f, () => _helpers.SetFreezeState(player, true)); 
+                _core.Scheduler.DelayBySeconds(0.5f, () => _helpers.SetFreezeState(player, true));
             }
         }
 
@@ -693,9 +694,9 @@ public class HanZriotEvents
             return HookResult.Continue;
 
         int now = _core.Engine.GlobalVars.TickCount;
-        int duration = 8; // 8 Tick ¡Ö 0.12 Ãë
+        int duration = 8; // 8 Tick â‰ˆ 0.12 ç§’
 
-        // ³ÖĞø 8 Tick£¨´óÔ¼ 0.12 Ãë£©
+        // æŒç»­ 8 Tickï¼ˆå¤§çº¦ 0.12 ç§’ï¼‰
         _globals.jumpBoostState[player] = now + duration;
 
         return HookResult.Continue;
@@ -734,7 +735,7 @@ public class HanZriotEvents
                 continue;
             }
 
-            if(pawn.TeamNum == 2)
+            if (pawn.TeamNum == 2)
             {
                 foreach (var zombie in ZombieList)
                 {
@@ -758,8 +759,8 @@ public class HanZriotEvents
     private HookResult OnWeaponFire(EventWeaponFire @event)
     {
         var player = @event.UserIdPlayer;
-        if(player == null || !player.IsValid)
-        return HookResult.Continue;
+        if (player == null || !player.IsValid)
+            return HookResult.Continue;
 
         var controller = player.Controller;
         if (controller == null || !controller.IsValid)

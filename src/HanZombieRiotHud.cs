@@ -4,6 +4,7 @@ using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Players;
 
 namespace HanZombieRiotS2;
+
 public class HanZriotHud
 {
     private readonly ILogger<HanZriotHud> _logger;
@@ -28,7 +29,7 @@ public class HanZriotHud
         _globals = globals;
     }
 
-    public void Show(IPlayer player) //僵尸暴动信息显示
+    public void Show(IPlayer player) //鍍靛案鏆村姩淇℃伅鏄剧ず
     {
         if (player == null || !player.IsValid)
             return;
@@ -60,7 +61,7 @@ public class HanZriotHud
         .Where(p =>
             p is { IsValid: true } &&
             p.Controller is { IsValid: true, TeamNum: 3 } controller &&
-            controller.PlayerPawn is { IsValid: true} pawn &&
+            controller.PlayerPawn is { IsValid: true } pawn &&
             controller.PawnIsAlive
         )
         .Count();
@@ -88,8 +89,8 @@ public class HanZriotHud
         {
             if (_globals.KillPercent <= 100f)
             {
-                DiffMessage = $"<span><font color='#E22D2D'>[{_core.Translation.GetPlayerLocalizer(player)["PollutionCount"]}:{_globals.KillPercent}％]</font></span><br>";
-                WDiffMessage = $"[{_core.Translation.GetPlayerLocalizer(player)["PollutionCount"]}:{_globals.KillPercent}％]";
+                DiffMessage = $"<span><font color='#E22D2D'>[{_core.Translation.GetPlayerLocalizer(player)["PollutionCount"]}:{_globals.KillPercent}锛匽</font></span><br>";
+                WDiffMessage = $"[{_core.Translation.GetPlayerLocalizer(player)["PollutionCount"]}:{_globals.KillPercent}锛匽";
             }
             else
             {
@@ -102,7 +103,7 @@ public class HanZriotHud
             DiffMessage = $"<span><font color='#E22D2D'>[{_core.Translation.GetPlayerLocalizer(player)["ZombiePowerful"]}]</font></span><br>";
             WDiffMessage = $"[{_core.Translation.GetPlayerLocalizer(player)["ZombiePowerful"]}]";
         }
-       
+
         string Message = $"<span><font color='#E22D2D'>{currentDay.DayName}</font></span><br>" +
             $"<span><font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["Stage"]}:[{_core.Translation.GetPlayerLocalizer(player)["Progress"]}</font><font color='#87CEEB'>{_globals.RiotDay}</font><font color='#FFFFE0'>/</font><font color='#87CEEB'>{maxDay}</font><font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["Days"]}]</font></span><br>" +
             $"<span><font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["ZombiesLeft"]}:</font> <font color='#E22D2D'>{LeftZombie}</font> <font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["ZCount"]}</font></span><br>" +
@@ -110,16 +111,16 @@ public class HanZriotHud
             $"{DiffMessage}" +
             $"<span><font color='#FFFFE0'>{currentDay.Storyline}</font></span>";
 
-        if (Controller.PawnIsAlive && pawn.TeamNum == 3) 
+        if (Controller.PawnIsAlive && pawn.TeamNum == 3)
         {
-            
+
             if (_globals.GameStart == true)
             {
                 player.SendMessage(MessageType.CenterHTML, $"{Message}");
             }
-            
+
         }
-        
+
     }
 
     private HanZriotDayConfig.Day HudGetCurrentDay(int riotDay)
@@ -127,7 +128,7 @@ public class HanZriotHud
         var config = _dayConfig.GetConfig(); //CurrentValue;
 
         if (config.Days == null || config.Days.Count == 0)
-            throw new InvalidOperationException($"{_core.Localizer["ServerHudError"]}"); 
+            throw new InvalidOperationException($"{_core.Localizer["ServerHudError"]}");
 
         if (riotDay < 1 || riotDay > config.Days.Count)
             riotDay = 1;

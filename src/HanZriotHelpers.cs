@@ -8,6 +8,7 @@ using SwiftlyS2.Shared.SchemaDefinitions;
 using static HanZombieRiotS2.ZombieDataConfig;
 
 namespace HanZombieRiotS2;
+
 public class HanZriotHelpers
 {
     private readonly ILogger<HanZriotHelpers> _logger;
@@ -33,7 +34,7 @@ public class HanZriotHelpers
         _zombieConfig = zombieConfig;
     }
 
-    
+
     public HanZriotDayConfig.Day GetCurrentDay(int RiotDay)
     {
         var config = _dayConfig.GetConfig();
@@ -72,7 +73,7 @@ public class HanZriotHelpers
 
     }
 
-    
+
     public void RespawnAllZombie()
     {
         var allPlayers = _core.PlayerManager.GetAllPlayers();
@@ -94,13 +95,13 @@ public class HanZriotHelpers
                         }
                     }
                 }
-                
+
             }
         }
     }
-    
 
-    public void PlayAmbSound() //²¥·Å»·¾³ÒôÀÖ
+
+    public void PlayAmbSound() //æ’­æ”¾ç¯å¢ƒéŸ³ä¹
     {
         var CFG = _mainConfig.CurrentValue;
         if (CFG.SoundAmbSound)
@@ -150,12 +151,12 @@ public class HanZriotHelpers
                 {
                     entity.AcceptInput("Kill", 0, null, null);
                 }
-                    
+
             }
         }
     }
 
-    public void TeleportZombie(IPlayer player) //´«ËÍ½©Ê¬ »ØºÏ½áÊøÒş²Ø½©Ê¬
+    public void TeleportZombie(IPlayer player) //ä¼ é€åƒµå°¸ å›åˆç»“æŸéšè—åƒµå°¸
     {
         if (!player.IsValid || player == null)
             return;
@@ -186,25 +187,25 @@ public class HanZriotHelpers
         string baseConfig = _core.Configuration.GetConfigPath("");
         string mapsConfig = Path.Combine(baseConfig, "mapsconfig");
 
-        // Èç¹û mapsconfig ÎÄ¼ş¼Ğ²»´æÔÚ ¡ú Ê¹ÓÃÄ¬ÈÏµØÍ¼
+        // å¦‚æœ mapsconfig æ–‡ä»¶å¤¹ä¸å­˜åœ¨ â†’ ä½¿ç”¨é»˜è®¤åœ°å›¾
         if (!Directory.Exists(mapsConfig))
         {
             FallbackToDefault();
             return;
         }
 
-        // ¸ù¾İÖ÷ÅäÖÃ¶ÁÈ¡¶ÔÓ¦ÎÄ¼ş
+        // æ ¹æ®ä¸»é…ç½®è¯»å–å¯¹åº”æ–‡ä»¶
         string fileName = CFG.useworkshopmap switch
         {
-            1 => "RandomMapConfig.jsonc",   // »ìºÏ¼¯
-            2 => "WorkShopMapConfig.jsonc", // Ö»¶ÁÈ¡¹¤·»
-            3 => "MapConfig.jsonc",         // Ö»¶ÁÈ¡¹ÙÍ¼
+            1 => "RandomMapConfig.jsonc",   // æ··åˆé›†
+            2 => "WorkShopMapConfig.jsonc", // åªè¯»å–å·¥åŠ
+            3 => "MapConfig.jsonc",         // åªè¯»å–å®˜å›¾
             _ => "MapConfig.jsonc"
         };
 
         string fullPath = Path.Combine(mapsConfig, fileName);
 
-        // ÎÄ¼ş²»´æÔÚ ¡ú Ê¹ÓÃÄ¬ÈÏµØÍ¼
+        // æ–‡ä»¶ä¸å­˜åœ¨ â†’ ä½¿ç”¨é»˜è®¤åœ°å›¾
         if (!File.Exists(fullPath))
         {
             _core.Logger.LogWarning($"{_core.Localizer["MapCfgError"]}: {fullPath}");
@@ -212,13 +213,13 @@ public class HanZriotHelpers
             return;
         }
 
-        // ¶ÁÈ¡ÓĞĞ§µØÍ¼ĞĞ
+        // è¯»å–æœ‰æ•ˆåœ°å›¾è¡Œ
         var mapList = File.ReadAllLines(fullPath)
             .Select(line => line.Trim())
             .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#"))
             .ToList();
 
-        // Èç¹ûÅäÖÃÎª¿Õ ¡ú Ä¬ÈÏµØÍ¼
+        // å¦‚æœé…ç½®ä¸ºç©º â†’ é»˜è®¤åœ°å›¾
         if (mapList.Count == 0)
         {
             _core.Logger.LogWarning($"{_core.Localizer["MapCfgEmpty"]}: {fullPath}");
@@ -226,25 +227,25 @@ public class HanZriotHelpers
             return;
         }
 
-        // Ëæ»úÑ¡ÔñÒ»¸öµØÍ¼Ïî
+        // éšæœºé€‰æ‹©ä¸€ä¸ªåœ°å›¾é¡¹
         string selected = mapList[Random.Shared.Next(mapList.Count)];
 
-        // ÅĞ¶ÏÊÇ ¹ÙÍ¼ OR ¹¤·»µØÍ¼
+        // åˆ¤æ–­æ˜¯ å®˜å›¾ OR å·¥åŠåœ°å›¾
         bool isWorkshop = selected.All(char.IsDigit);
 
         _logger.LogInformation($"{_core.Localizer["MapRandomSelect"]}: {selected} (Workshop: {isWorkshop})");
 
-        // Ö´ĞĞ¸ü»»µØÍ¼
+        // æ‰§è¡Œæ›´æ¢åœ°å›¾
         _core.Scheduler.DelayBySeconds(1.0f, () =>
         {
             if (isWorkshop)
             {
-                // ¡ú ¹¤·»µØÍ¼£ºÊ¹ÓÃ host_workshop_map
+                // â†’ å·¥åŠåœ°å›¾ï¼šä½¿ç”¨ host_workshop_map
                 _core.Engine.ExecuteCommand($"host_workshop_map {selected}");
             }
             else
             {
-                // ¡ú ÆÕÍ¨µØÍ¼£ºÊ¹ÓÃ changelevel
+                // â†’ æ™®é€šåœ°å›¾ï¼šä½¿ç”¨ changelevel
                 _core.Engine.ExecuteCommand($"changelevel {selected}");
             }
         });
@@ -253,47 +254,47 @@ public class HanZriotHelpers
 
     private void FallbackToDefault()
     {
-        _core.Logger.LogWarning($"{_core.Localizer["UseDefaultMap"]}£ºde_dust2");
+        _core.Logger.LogWarning($"{_core.Localizer["UseDefaultMap"]}ï¼šde_dust2");
         _core.Scheduler.DelayBySeconds(1.0f, () =>
         {
             _core.Engine.ExecuteCommand("changelevel de_dust2");
         });
     }
 
-    
+
 
     public List<Zombie> GetZombiesForCurrentLevel(int currentDayIndex)
     {
         var Dayconfig = _dayConfig.GetConfig();
         var Zombieconfig = _zombieConfig.GetConfig();
-        //_core.Logger.LogInformation($"[½©Ê¬Ñ¡Ôñ] µ±Ç°DayË÷Òı: {currentDayIndex}");
+        //_core.Logger.LogInformation($"[åƒµå°¸é€‰æ‹©] å½“å‰Dayç´¢å¼•: {currentDayIndex}");
 
         if (currentDayIndex < 0 || currentDayIndex >= Dayconfig.Days.Count)
         {
-            //_core.Logger.LogInformation("[½©Ê¬Ñ¡Ôñ] Ë÷ÒıÎŞĞ§£¬·µ»Ø¿ÕÁĞ±í");
+            //_core.Logger.LogInformation("[åƒµå°¸é€‰æ‹©] ç´¢å¼•æ— æ•ˆï¼Œè¿”å›ç©ºåˆ—è¡¨");
             return new List<Zombie>();
         }
 
         var day = Dayconfig.Days[currentDayIndex];
         List<Zombie> zombiesForLevel = new List<Zombie>();
 
-        //_core.Logger.LogInformation($"[½©Ê¬Ñ¡Ôñ] µ±Ç°¹Ø¿¨Ãû: {day.DayName}, ZombieOverride = {day.ZombieOverride}");
+        //_core.Logger.LogInformation($"[åƒµå°¸é€‰æ‹©] å½“å‰å…³å¡å: {day.DayName}, ZombieOverride = {day.ZombieOverride}");
 
         if (!string.IsNullOrEmpty(day.ZombieOverride))
         {
             var zombieNames = day.ZombieOverride.Split(',');
-            //_core.Logger.LogInformation($"[½©Ê¬Ñ¡Ôñ] Ö¸¶¨½©Ê¬ÊıÁ¿: {zombieNames.Length}");
+            //_core.Logger.LogInformation($"[åƒµå°¸é€‰æ‹©] æŒ‡å®šåƒµå°¸æ•°é‡: {zombieNames.Length}");
 
             foreach (var zombieName in zombieNames)
             {
-                //_core.Logger.LogInformation($"[½©Ê¬Ñ¡Ôñ] ²éÕÒ½©Ê¬: {zombieName}");
+                //_core.Logger.LogInformation($"[åƒµå°¸é€‰æ‹©] æŸ¥æ‰¾åƒµå°¸: {zombieName}");
                 var zombie = Zombieconfig.ZombieList.FirstOrDefault(
                     z => z.Name.Equals(zombieName, StringComparison.OrdinalIgnoreCase)
                 );
 
                 if (zombie != null)
                 {
-                    //_core.Logger.LogInformation($"[½©Ê¬Ñ¡Ôñ] ÕÒµ½½©Ê¬: {zombie.Name}");
+                    //_core.Logger.LogInformation($"[åƒµå°¸é€‰æ‹©] æ‰¾åˆ°åƒµå°¸: {zombie.Name}");
                     zombiesForLevel.Add(zombie);
                 }
                 else
@@ -306,7 +307,7 @@ public class HanZriotHelpers
         {
             if (Zombieconfig != null)
             {
-                //_core.Logger.LogInformation($"[½©Ê¬Ñ¡Ôñ] Ã»Ö¸¶¨½©Ê¬£¬Ê¹ÓÃÄ¬ÈÏÁĞ±í£¬¹² {Zombieconfig.ZombieList.Count} ¸ö¡£");
+                //_core.Logger.LogInformation($"[åƒµå°¸é€‰æ‹©] æ²¡æŒ‡å®šåƒµå°¸ï¼Œä½¿ç”¨é»˜è®¤åˆ—è¡¨ï¼Œå…± {Zombieconfig.ZombieList.Count} ä¸ªã€‚");
                 zombiesForLevel = Zombieconfig.ZombieList;
             }
             else
@@ -315,7 +316,7 @@ public class HanZriotHelpers
             }
         }
 
-        //_core.Logger.LogInformation($"[½©Ê¬Ñ¡Ôñ] ×îÖÕ½©Ê¬ÊıÁ¿: {zombiesForLevel.Count}");
+        //_core.Logger.LogInformation($"[åƒµå°¸é€‰æ‹©] æœ€ç»ˆåƒµå°¸æ•°é‡: {zombiesForLevel.Count}");
         return zombiesForLevel;
     }
 
@@ -324,24 +325,24 @@ public class HanZriotHelpers
     {
         if (_globals.CurrentMapIsHighDiff)
         {
-            // Èç¹ûµ±Ç°µØÍ¼ÊÇ¸ßÄÑ¶È£¬»÷É±Êı²»»áÔö¼Ó
+            // å¦‚æœå½“å‰åœ°å›¾æ˜¯é«˜éš¾åº¦ï¼Œå‡»æ€æ•°ä¸ä¼šå¢åŠ 
             return;
         }
 
-        // ÔÊĞíÆÕÍ¨ÄÑ¶ÈÔö¼Ó»÷É±Êı
+        // å…è®¸æ™®é€šéš¾åº¦å¢åŠ å‡»æ€æ•°
         _globals.KillCount++;
 
-        // ¼ÆËã»÷É±°Ù·Ö±È
+        // è®¡ç®—å‡»æ€ç™¾åˆ†æ¯”
         _globals.KillPercent = MathF.Round(_globals.KillCount * 0.1f, 1);
 
-        // µ±»÷É±°Ù·Ö±È´ïµ½ 100% Ê±£¬±ê¼ÇÏÂÒ»ÕÅµØÍ¼Îª¸ßÄÑ¶È
+        // å½“å‡»æ€ç™¾åˆ†æ¯”è¾¾åˆ° 100% æ—¶ï¼Œæ ‡è®°ä¸‹ä¸€å¼ åœ°å›¾ä¸ºé«˜éš¾åº¦
         if (_globals.KillPercent >= 100f)
         {
             _globals.HightDiff = true;
         }
         else
         {
-            _globals.HightDiff = false; // **Èç¹û»÷É±°Ù·Ö±ÈµÍÓÚ 100%£¬ÖØÖÃÎªÆÕÍ¨ÄÑ¶È**
+            _globals.HightDiff = false; // **å¦‚æœå‡»æ€ç™¾åˆ†æ¯”ä½äº 100%ï¼Œé‡ç½®ä¸ºæ™®é€šéš¾åº¦**
         }
     }
 
@@ -354,7 +355,7 @@ public class HanZriotHelpers
         Controller.Respawn();
     }
 
-    public void DeleSpawnProtect(IPlayer player) //É¾³ıÖØÉú±£»¤
+    public void DeleSpawnProtect(IPlayer player) //åˆ é™¤é‡ç”Ÿä¿æŠ¤
     {
         if (player == null || !player.IsValid)
             return;
@@ -369,7 +370,7 @@ public class HanZriotHelpers
         }
     }
 
-    public void NoBlock(CCSPlayerPawn pawn) //Åö×²Ìå»ı¹Ø±Õ
+    public void NoBlock(CCSPlayerPawn pawn) //ç¢°æ’ä½“ç§¯å…³é—­
     {
         if (pawn == null || !pawn.IsValid)
             return;
@@ -378,7 +379,7 @@ public class HanZriotHelpers
         pawn.CollisionRulesChanged();
     }
 
-    public void GiveCash(IPlayer player, int account, string info) //¸øÓè½ğÇ®
+    public void GiveCash(IPlayer player, int account, string info) //ç»™äºˆé‡‘é’±
     {
         if (player == null || !player.IsValid)
             return;
@@ -396,7 +397,7 @@ public class HanZriotHelpers
         int current = Ims.Account;
         int max = _core.ConVar.Find<int>("mp_maxmoney")?.Value ?? 16000;
         int newMoney = Math.Min(current + account, max);
-        Ims.Account = newMoney;                     
+        Ims.Account = newMoney;
         controller.InGameMoneyServicesUpdated();
 
         var loc = _core.Translation.GetPlayerLocalizer(player);
@@ -432,7 +433,7 @@ public class HanZriotHelpers
     
     */
 
-    public void SetTeamScore(Team team) //ÉèÖÃ¶ÓÎé·ÖÊı
+    public void SetTeamScore(Team team) //è®¾ç½®é˜Ÿä¼åˆ†æ•°
     {
         var teamManagers = _core.EntitySystem.GetAllEntitiesByDesignerName<CCSTeam>("cs_team_manager");
 
@@ -448,26 +449,26 @@ public class HanZriotHelpers
 
 
 
-    
 
 
 
 
 
-    public void TerminateRound(RoundEndReason reason, float delay) 
+
+    public void TerminateRound(RoundEndReason reason, float delay)
     {
         var gameRules = _core.EntitySystem.GetGameRules();
         if (gameRules is not { IsValid: true, WarmupPeriod: false })
             return;
 
-        gameRules.TerminateRound(reason , delay);
+        gameRules.TerminateRound(reason, delay);
     }
-    
+
 
 
     public void SetFreezeState(IPlayer player, bool freeze)
     {
-        if (!player.IsValid) 
+        if (!player.IsValid)
             return;
 
         var controller = player.Controller;
@@ -510,7 +511,7 @@ public class HanZriotHelpers
     {
         _globals.g_DeathCountDown?.Cancel();
         _globals.g_DeathCountDown = null;
-        // Ã¿ÃëÖ´ĞĞÒ»´ÎÈ«¾Ö¼ì²é
+        // æ¯ç§’æ‰§è¡Œä¸€æ¬¡å…¨å±€æ£€æŸ¥
         _globals.g_DeathCountDown = _core.Scheduler.DelayAndRepeatBySeconds(0.0f, 1.0f, () =>
         {
             int now = Environment.TickCount;
@@ -536,7 +537,7 @@ public class HanZriotHelpers
 
                 int target = _globals.DeathTime[player.PlayerID];
                 if (target <= 0)
-                    continue; // Ã»ÓĞËÀÍö»òÒÑ¸´»î
+                    continue; // æ²¡æœ‰æ­»äº¡æˆ–å·²å¤æ´»
 
                 int remainMs = target - now;
                 int remainSec = remainMs / 1000;
@@ -574,7 +575,7 @@ public class HanZriotHelpers
             {
                 var state = pair.Value;
 
-                // »ñÈ¡Íæ¼Ò
+                // è·å–ç©å®¶
                 foreach (var player in _core.PlayerManager.GetAllPlayers())
                 {
                     if (player == null || !player.IsValid)
@@ -596,18 +597,18 @@ public class HanZriotHelpers
 
                     int maxHealth = pawn.MaxHealth;
 
-                    // ÈôÑªÁ¿³¬³ö maxHealth£¬²»»ØÑª
+                    // è‹¥è¡€é‡è¶…å‡º maxHealthï¼Œä¸å›è¡€
                     if (pawn.Health >= maxHealth)
                         continue;
 
                     if (now < state.NextRegenTime)
                         continue;
 
-                    // Ö´ĞĞ»ØÑª
+                    // æ‰§è¡Œå›è¡€
                     pawn.Health = Math.Min(pawn.Health + state.RegenAmount, maxHealth);
                     pawn.HealthUpdated();
 
-                    // ÉèÖÃÏÂÒ»´Î»ØÑª
+                    // è®¾ç½®ä¸‹ä¸€æ¬¡å›è¡€
                     state.NextRegenTime = now + state.RegenInterval;
                 }
             }
@@ -625,7 +626,7 @@ public class HanZriotHelpers
         {
             foreach (var player in _core.PlayerManager.GetAllPlayers())
             {
-                
+
                 if (player == null || !player.IsValid)
                     continue;
 
@@ -646,10 +647,10 @@ public class HanZriotHelpers
                 if (pawn == null || !pawn.IsValid)
                     continue;
 
-                if(pawn.TeamNum != 3)
+                if (pawn.TeamNum != 3)
                     continue;
 
-                _hud.Show(player); 
+                _hud.Show(player);
             }
         });
 

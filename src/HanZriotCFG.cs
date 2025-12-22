@@ -1,4 +1,5 @@
 namespace HanZombieRiotS2;
+
 public class HanZriotCFG
 {
     public int useworkshopmap { get; set; } = 0;
@@ -16,7 +17,7 @@ public class HanZriotCFG
     public string SoundEventremaining { get; set; } = "remainingsound";
 
     public bool SoundCountdown { get; set; } = true;
-    public string SoundEventCountdown { get; set; } =  "sound1,sound2,sound3,sound4,sound5,sound6,sound7,sound8,sound9,sound10";
+    public string SoundEventCountdown { get; set; } = "sound1,sound2,sound3,sound4,sound5,sound6,sound7,sound8,sound9,sound10";
 
     public bool SoundZombieStart { get; set; } = true;
     public string SoundEventZombieStart { get; set; } = "ZombieStartsound";
@@ -47,7 +48,7 @@ public class HanZriotCFG
 
     public string PrecacheSoundEvent { get; set; } = string.Empty;
 
-    
+
 
 
 }
