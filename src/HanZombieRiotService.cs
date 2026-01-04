@@ -131,135 +131,45 @@ public class HanZriotService
         }
 
     }
-
     public void Round_Countdown()
     {
         var CFG = _mainConfig.CurrentValue;
-        var soundList = CFG.SoundEventCountdown.Split(',');
+        int currentDisplay = _globals.Countdown;
 
-        if (_globals.Countdown > 0)
+        if (_globals.Countdown > 0) _globals.Countdown--;
+
+        if (currentDisplay <= 10 && currentDisplay >= 1 && CFG.SoundCountdown)
         {
-            _globals.Countdown--;
-        }
-        if (_globals.Countdown == 20 && _globals.Countdown != 0)
-        {
-            if (CFG.Soundremaining)
+            var soundList = CFG.SoundEventCountdown.Split(',');
+
+            int soundIndex = currentDisplay - 1;
+
+            if (soundIndex >= 0 && soundIndex < soundList.Length)
             {
-                _helpers.EmitSoundToAll(CFG.SoundEventremaining);
+                _helpers.EmitSoundToAll(soundList[soundIndex].Trim());
             }
         }
-        else if (_globals.Countdown == 10 && _globals.Countdown != 0)
+        else if (currentDisplay == 20 && CFG.Soundremaining)
         {
-            if (CFG.SoundCountdown)
-            {
-                string sound10 = soundList[9];
-                _helpers.EmitSoundToAll(sound10);
-            }
+            _helpers.EmitSoundToAll(CFG.SoundEventremaining);
         }
-        else if (_globals.Countdown == 9 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound9 = soundList[8];
-                _helpers.EmitSoundToAll(sound9);
-            }
-        }
-        else if (_globals.Countdown == 8 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound8 = soundList[7];
-                _helpers.EmitSoundToAll(sound8);
-            }
-        }
-        else if (_globals.Countdown == 7 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound7 = soundList[6];
-                _helpers.EmitSoundToAll(sound7);
-            }
-        }
-        else if (_globals.Countdown == 6 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound6 = soundList[5];
-                _helpers.EmitSoundToAll(sound6);
-            }
-        }
-        else if (_globals.Countdown == 5 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound5 = soundList[4];
-                _helpers.EmitSoundToAll(sound5);
-            }
-        }
-        else if (_globals.Countdown == 4 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound4 = soundList[3];
-                _helpers.EmitSoundToAll(sound4);
-            }
-        }
-        else if (_globals.Countdown == 3 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound3 = soundList[2];
-                _helpers.EmitSoundToAll(sound3);
-            }
-        }
-        else if (_globals.Countdown == 2 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound2 = soundList[1];
-                _helpers.EmitSoundToAll(sound2);
-            }
-        }
-        else if (_globals.Countdown == 1 && _globals.Countdown != 0)
-        {
-            if (CFG.SoundCountdown)
-            {
-                string sound1 = soundList[0];
-                _helpers.EmitSoundToAll(sound1);
-            }
-        }
-        else if (_globals.Countdown == 0)
-        {
-            if (CFG.SoundZombieStart)
-            {
-                _helpers.EmitSoundToAll(CFG.SoundEventZombieStart);
-            }
-            _helpers.SetAllZombieUnFreeze();
-        }
-        if (_globals.Countdown <= 0)
+
+        if (currentDisplay <= 0)
         {
             _globals.g_hCountdown?.Cancel();
             _globals.g_hCountdown = null;
             _globals.GameStart = true;
+            _helpers.SetAllZombieUnFreeze();
+            if (CFG.SoundZombieStart) _helpers.EmitSoundToAll(CFG.SoundEventZombieStart);
+            return;
         }
-        var allPlayers = _core.PlayerManager.GetAllPlayers();
-        foreach (var player in allPlayers)
-        {
-            if (player.IsValid)
-            {
-                var pawn = player.PlayerPawn;
-                if (pawn != null && pawn.IsValid)
-                {
-                    if (pawn.TeamNum == 3)
-                    {
-                        if (!player.IsFakeClient)
-                        {
-                            player.SendMessage(MessageType.Center, $"{_globals.Countdown} {_core.Translation.GetPlayerLocalizer(player)["MoveZombie"]}");
-                        }
-                    }
-                }
-            }
 
+        foreach (var player in _core.PlayerManager.GetCTAlive())
+        {
+            if (player is { IsValid: true } && !player.IsFakeClient)
+            {
+                player.SendMessage(MessageType.Center, $"{currentDisplay} {_core.Translation.GetPlayerLocalizer(player)["MoveZombie"]}");
+            }
         }
     }
 
@@ -354,64 +264,58 @@ public class HanZriotService
 
     }
 
+    public void ForceDayEnd()
+    {
+        _globals.GameStart = false;
+
+        _globals.g_hCountdown?.Cancel();
+        _globals.g_hCountdown = null;
+
+        _globals.ZombieKill = 0;
+
+        _helpers.TerminateRound(RoundEndReason.RoundDraw, 8.0f);
+    }
+
     public void JoinTeamCheck(IPlayer player)
     {
-
-        var pawn = player.PlayerPawn;
-        if (pawn == null || !pawn.IsValid)
+        if (player is not { IsValid: true } || player.Controller is not { IsValid: true } ctrl)
             return;
-
-        var Controller = player.Controller;
-        if (Controller == null || !Controller.IsValid)
-            return;
-
-        var HumanCount = _core.PlayerManager.GetAllPlayers()
-            .Where(humans =>
-                humans.PlayerPawn is { IsValid: true, TeamNum: 3 } &&
-                humans.Controller is { IsValid: true } &&
-                humans.Controller.PawnIsAlive)
-            .Count();
-
 
         if (!_globals.GameStart)
         {
-            if (!Controller.PawnIsAlive)
+            if (!ctrl.PawnIsAlive)
             {
-                Controller.Respawn();
+                ctrl.Respawn();
+            }
+            return;
+        }
+
+        var humanCount = _core.PlayerManager.GetCTAlive().Count();
+
+        if (humanCount > 0)
+        {
+            if (!ctrl.PawnIsAlive)
+            {
+                ctrl.Respawn();
             }
         }
         else
         {
-            if (HumanCount > 0)
-            {
-                if (!Controller.PawnIsAlive)
-                {
-                    Controller.Respawn();
-                }
-            }
-            else
+            if (_globals.g_DeathCheck != null)
             {
                 Faketswin();
             }
         }
-
     }
 
 
     public void CheckHumanAlive()
     {
-        var HumanCount = _core.PlayerManager.GetAllPlayers()
-            .Where(humans =>
-                humans.PlayerPawn is { IsValid: true, TeamNum: 3 } &&
-                humans.Controller is { IsValid: true } &&
-                humans.Controller.PawnIsAlive)
-            .Count();
-
-        if (HumanCount <= 0 && _globals.GameStart)
+        var humanCount = _core.PlayerManager.GetCTAlive().Count();
+        if (humanCount <= 0 && _globals.GameStart)
         {
             Faketswin();
             _globals.GameStart = false;
         }
     }
-
 }

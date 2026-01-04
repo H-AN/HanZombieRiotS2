@@ -12,7 +12,7 @@ namespace HanZombieRiotS2;
 
 [PluginMetadata(
     Id = "HanZombieRiotS2",
-    Version = "2.2.0",
+    Version = "3.0.0",
     Name = "僵尸暴动 for Sw2/HanZombieRiotS2",
     Author = "H-AN",
     Description = "CS2僵尸暴动 SW2版本 CS2 zombieriot for SW2.")]

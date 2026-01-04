@@ -110,42 +110,24 @@ public class HanZriotCommands
         return HookResult.Continue;
     }
 
-
-
     public void NEXTDAY(ICommandContext context)
     {
         var player = context.Sender;
         if (player == null || !player.IsValid)
             return;
 
-        var Controller = player.Controller;
-        if (Controller == null || !Controller.IsValid)
-            return;
         int maxDay = _dayConfig.GetConfig().Days.Count;
 
-        if (_globals.RiotDay < maxDay)
-        {
-            _globals.RiotDay++;
-        }
-        else
-        {
-            _globals.RiotDay = maxDay;
-        }
+        _globals.RiotDay = Math.Min(_globals.RiotDay + 1, maxDay);
 
-
-        _helpers.TerminateRound(RoundEndReason.RoundDraw, 8.0f);
-
-        _core.PlayerManager.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminNextDay", Controller.PlayerName]}");
+        _services.ForceDayEnd();
+        _core.PlayerManager.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminNextDay", player.Controller.PlayerName]}");
     }
 
     public void SETDAY(ICommandContext context)
     {
         var player = context.Sender;
         if (player == null || !player.IsValid)
-            return;
-
-        var Controller = player.Controller;
-        if (Controller == null || !Controller.IsValid)
             return;
 
         int maxDay = _dayConfig.GetConfig().Days.Count;
@@ -161,11 +143,11 @@ public class HanZriotCommands
             return;
         }
 
-
         _globals.RiotDay = count;
-        _helpers.TerminateRound(RoundEndReason.RoundDraw, 8.0f);
 
-        _core.PlayerManager.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDay", Controller.PlayerName, count]}");
+        _services.ForceDayEnd();
+
+        _core.PlayerManager.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDay", player.Controller.PlayerName, count]}");
     }
 
     public void changediff(ICommandContext context)

@@ -511,49 +511,48 @@ public class HanZriotHelpers
     {
         _globals.g_DeathCountDown?.Cancel();
         _globals.g_DeathCountDown = null;
-        // 每秒执行一次全局检查
-        _globals.g_DeathCountDown = _core.Scheduler.DelayAndRepeatBySeconds(0.0f, 1.0f, () =>
+
+        _globals.g_DeathCountDown = _core.Scheduler.RepeatBySeconds(1.0f, () =>
         {
             int now = Environment.TickCount;
-
-            foreach (var player in _core.PlayerManager.GetAllPlayers())
+            var ctPlayers = _core.PlayerManager.GetCT();
+            foreach (var player in ctPlayers)
             {
-                if (player == null || !player.IsValid)
-                    continue;
-
-                if (!_core.PlayerManager.IsPlayerOnline(player.PlayerID))
-                    continue;
-
-                var controller = player.Controller;
-                if (controller == null || !controller.IsValid)
-                    continue;
-
-                var pawn = player.PlayerPawn;
-                if (pawn == null || !pawn.IsValid)
-                    continue;
-
-                if (pawn.TeamNum != 3)
-                    continue;
-
-                int target = _globals.DeathTime[player.PlayerID];
-                if (target <= 0)
-                    continue; // 没有死亡或已复活
-
-                int remainMs = target - now;
-                int remainSec = remainMs / 1000;
-
-                if (remainMs <= 0)
+                try
                 {
-                    _core.Scheduler.NextTick(() =>
+                    if (player == null || !player.IsValid || player.IsFakeClient)
+                        continue;
+
+                    int target = _globals.DeathTime[player.PlayerID];
+
+                    if (target <= 0)
+                        continue;
+
+                    int remainMs = target - now;
+                    int remainSec = remainMs / 1000;
+
+                    if (remainMs <= 0)
                     {
-                        RespawnClient(controller);
-                    });
-                    _globals.DeathTime[player.PlayerID] = 0;
-                    player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["Spawned"]}");
+                        _globals.DeathTime[player.PlayerID] = 0;
+
+                        _core.Scheduler.NextTick(() =>
+                        {
+                            if (player is { IsValid: true } && player.Controller is { IsValid: true } ctrl)
+                            {
+                                RespawnClient(ctrl);
+                                player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["Spawned"]}");
+                            }
+                        });
+                    }
+                    else
+                    {
+                        int displaySec = remainSec < 0 ? 0 : remainSec;
+                        player.SendMessage(MessageType.CenterHTML, $"{_core.Translation.GetPlayerLocalizer(player)["ReSpawn", displaySec]}");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    player.SendMessage(MessageType.CenterHTML, $"{_core.Translation.GetPlayerLocalizer(player)["ReSpawn", remainSec]}");
+                    _core.Logger.LogError($"DeathTimer Individual Player Error: {ex.Message}");
                 }
             }
         });
@@ -567,49 +566,37 @@ public class HanZriotHelpers
         _globals.g_ZombieRegenTimer?.Cancel();
         _globals.g_ZombieRegenTimer = null;
 
-        _globals.g_ZombieRegenTimer = _core.Scheduler.DelayAndRepeatBySeconds(0.0f, 0.2f, () =>
+        _globals.g_ZombieRegenTimer = _core.Scheduler.RepeatBySeconds(0.2f, () =>
         {
-            float now = Environment.TickCount;
+            int now = Environment.TickCount;
+            var aliveZombies = _core.PlayerManager.GetTAlive();
 
-            foreach (var pair in _globals.g_ZombieRegenStates)
+            foreach (var player in aliveZombies)
             {
-                var state = pair.Value;
-
-                // 获取玩家
-                foreach (var player in _core.PlayerManager.GetAllPlayers())
+                try
                 {
-                    if (player == null || !player.IsValid)
-                        continue;
-
-                    var controller = player.Controller;
-                    if (controller == null || !controller.IsValid)
+                    if (!_globals.g_ZombieRegenStates.TryGetValue(player.PlayerID, out var state))
                         continue;
 
                     var pawn = player.PlayerPawn;
                     if (pawn == null || !pawn.IsValid)
                         continue;
 
-                    if (pawn.TeamNum != 2)
-                        continue;
-
-                    if (!controller.PawnIsAlive)
-                        continue;
-
                     int maxHealth = pawn.MaxHealth;
-
-                    // 若血量超出 maxHealth，不回血
                     if (pawn.Health >= maxHealth)
                         continue;
 
                     if (now < state.NextRegenTime)
                         continue;
 
-                    // 执行回血
                     pawn.Health = Math.Min(pawn.Health + state.RegenAmount, maxHealth);
                     pawn.HealthUpdated();
 
-                    // 设置下一次回血
                     state.NextRegenTime = now + state.RegenInterval;
+                }
+                catch (Exception ex)
+                {
+                    _core.Logger.LogError($"Regen Error: {ex.Message}");
                 }
             }
         });
@@ -622,35 +609,24 @@ public class HanZriotHelpers
         _globals.g_HUDTimer?.Cancel();
         _globals.g_HUDTimer = null;
 
-        _globals.g_HUDTimer = _core.Scheduler.DelayAndRepeatBySeconds(0.0f, 0.1f, () =>
+        _globals.g_HUDTimer = _core.Scheduler.RepeatBySeconds(0.1f, () =>
         {
-            foreach (var player in _core.PlayerManager.GetAllPlayers())
+
+            var aliveHumans = _core.PlayerManager.GetCTAlive();
+
+            foreach (var player in aliveHumans)
             {
+                try
+                {
+                    if (player.IsFakeClient)
+                        continue;
 
-                if (player == null || !player.IsValid)
-                    continue;
-
-                if (!_core.PlayerManager.IsPlayerOnline(player.PlayerID))
-                    continue;
-
-                if (player.IsFakeClient)
-                    continue;
-
-                var Controller = player.Controller;
-                if (Controller == null || !Controller.IsValid)
-                    continue;
-
-                if (!Controller.PawnIsAlive)
-                    continue;
-
-                var pawn = player.PlayerPawn;
-                if (pawn == null || !pawn.IsValid)
-                    continue;
-
-                if (pawn.TeamNum != 3)
-                    continue;
-
-                _hud.Show(player);
+                    _hud.Show(player);
+                }
+                catch (Exception ex)
+                {
+                    _core.Logger.LogError($"HUD Timer Error: {ex.Message}");
+                }
             }
         });
 

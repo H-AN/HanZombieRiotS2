@@ -150,7 +150,7 @@ public class HanZriotEvents
         {
             _globals.g_hAmbMusic?.Cancel();
             _globals.g_hAmbMusic = null;
-            _globals.g_hAmbMusic = _core.Scheduler.DelayAndRepeatBySeconds(0.0f, CFG.AmbSoundLoopTime, () => _helpers.PlayAmbSound());
+            _globals.g_hAmbMusic = _core.Scheduler.DelayAndRepeatBySeconds(0.1f, CFG.AmbSoundLoopTime, () => _helpers.PlayAmbSound());
             _core.Scheduler.StopOnMapChange(_globals.g_hAmbMusic);
         }
 
@@ -347,22 +347,8 @@ public class HanZriotEvents
 
         _core.Scheduler.NextTick(() =>
         {
-            /*
-            var HumanCount = _core.PlayerManager.GetAllPlayers()
-            .Where(humans =>
-                humans.PlayerPawn is { IsValid: true, TeamNum: 3 } &&
-                humans.Controller is { IsValid: true } &&
-                humans.Controller.PawnIsAlive)
-            .Count();
-            */
-            var HumanCount = _core.PlayerManager.GetAllPlayers()
-            .Where(p =>
-                p is { IsValid: true } &&
-                p.Controller is { IsValid: true, TeamNum: 3 } controller &&
-                controller.PlayerPawn is { IsValid: true } pawn &&
-                controller.PawnIsAlive
-            )
-            .Count();
+
+            var HumanCount = _core.PlayerManager.GetCTAlive().Count();
 
             if (DeatherPawn.TeamNum == 2)
             {

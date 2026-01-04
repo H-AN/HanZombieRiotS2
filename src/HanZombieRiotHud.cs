@@ -28,99 +28,55 @@ public class HanZriotHud
         _zombieConfig = zombieConfig;
         _globals = globals;
     }
-
-    public void Show(IPlayer player) //僵尸暴动信息显示
+    public void Show(IPlayer player)
     {
-        if (player == null || !player.IsValid)
-            return;
 
-        if (_globals.PlayerHud[player.PlayerID])
-            return;
-
-        if (player.IsFakeClient)
+        if (player is not { IsValid: true } || _globals.PlayerHud[player.PlayerID] || player.IsFakeClient)
             return;
 
         var pawn = player.PlayerPawn;
-        if (pawn == null || !pawn.IsValid)
+        var controller = player.Controller;
+        if (pawn is not { IsValid: true } || controller is not { IsValid: true })
             return;
 
-        var Controller = player.Controller;
-        if (Controller == null || !Controller.IsValid)
-            return;
 
-        /*
-        var HumanCount = _core.PlayerManager.GetAllPlayers()
-            .Where(humans =>
-                humans is { IsValid: true} &&
-                humans.PlayerPawn is { IsValid: true, TeamNum: 3 } &&
-                humans.Controller is { IsValid: true } &&
-                humans.Controller.PawnIsAlive)
-            .Count();
-        */
-        var HumanCount = _core.PlayerManager.GetAllPlayers()
-        .Where(p =>
-            p is { IsValid: true } &&
-            p.Controller is { IsValid: true, TeamNum: 3 } controller &&
-            controller.PlayerPawn is { IsValid: true } pawn &&
-            controller.PawnIsAlive
-        )
-        .Count();
+        int humanCount = _core.PlayerManager.GetCTAlive().Count();
+        int aliveZombie = _core.PlayerManager.GetTAlive().Count();
 
-        var AliveZombie = _core.PlayerManager.GetAllPlayers()
-            .Where(Zombie =>
-                Zombie.PlayerPawn is { IsValid: true, TeamNum: 2 } &&
-                Zombie.Controller is { IsValid: true } &&
-                Zombie.Controller.PawnIsAlive)
-            .Count();
-
-
-        int LeftZombie = _globals.NeedKillZombie - _globals.ZombieKill;
-
-        var Dayconfig = _dayConfig.GetConfig(); //CurrentValue;
-
-        int maxDay = Dayconfig.Days.Count;
-
+        int leftZombie = _globals.NeedKillZombie - _globals.ZombieKill;
+        var dayConfig = _dayConfig.GetConfig();
+        int maxDay = dayConfig.Days.Count;
         var currentDay = HudGetCurrentDay(_globals.RiotDay);
 
-        string DiffMessage;
-        string WDiffMessage;
+        var localizer = _core.Translation.GetPlayerLocalizer(player);
+
+        string diffMessage;
+        // string wDiffMessage; 
 
         if (!_globals.CurrentMapIsHighDiff)
         {
             if (_globals.KillPercent <= 100f)
-            {
-                DiffMessage = $"<span><font color='#E22D2D'>[{_core.Translation.GetPlayerLocalizer(player)["PollutionCount"]}:{_globals.KillPercent}％]</font></span><br>";
-                WDiffMessage = $"[{_core.Translation.GetPlayerLocalizer(player)["PollutionCount"]}:{_globals.KillPercent}％]";
-            }
+                diffMessage = $"<span><font color='#E22D2D'>[{localizer["PollutionCount"]}:{_globals.KillPercent}％]</font></span><br>";
             else
-            {
-                DiffMessage = $"<span><font color='#E22D2D'>[{_core.Translation.GetPlayerLocalizer(player)["HardMode"]}]</font></span><br>";
-                WDiffMessage = $"[{_core.Translation.GetPlayerLocalizer(player)["HardMode"]}]";
-            }
+                diffMessage = $"<span><font color='#E22D2D'>[{localizer["HardMode"]}]</font></span><br>";
         }
         else
         {
-            DiffMessage = $"<span><font color='#E22D2D'>[{_core.Translation.GetPlayerLocalizer(player)["ZombiePowerful"]}]</font></span><br>";
-            WDiffMessage = $"[{_core.Translation.GetPlayerLocalizer(player)["ZombiePowerful"]}]";
+            diffMessage = $"<span><font color='#E22D2D'>[{localizer["ZombiePowerful"]}]</font></span><br>";
         }
 
-        string Message = $"<span><font color='#E22D2D'>{currentDay.DayName}</font></span><br>" +
-            $"<span><font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["Stage"]}:[{_core.Translation.GetPlayerLocalizer(player)["Progress"]}</font><font color='#87CEEB'>{_globals.RiotDay}</font><font color='#FFFFE0'>/</font><font color='#87CEEB'>{maxDay}</font><font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["Days"]}]</font></span><br>" +
-            $"<span><font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["ZombiesLeft"]}:</font> <font color='#E22D2D'>{LeftZombie}</font> <font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["ZCount"]}</font></span><br>" +
-            $"<span><font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["HumanLeft"]}:</font> <font color='#00FF00'>{HumanCount}</font> <font color='#FFFFE0'>{_core.Translation.GetPlayerLocalizer(player)["HCount"]}</font></span><br>" +
-            $"{DiffMessage}" +
+
+        string message = $"<span><font color='#E22D2D'>{currentDay.DayName}</font></span><br>" +
+            $"<span><font color='#FFFFE0'>{localizer["Stage"]}:[{localizer["Progress"]}</font><font color='#87CEEB'>{_globals.RiotDay}</font><font color='#FFFFE0'>/</font><font color='#87CEEB'>{maxDay}</font><font color='#FFFFE0'>{localizer["Days"]}]</font></span><br>" +
+            $"<span><font color='#FFFFE0'>{localizer["ZombiesLeft"]}:</font> <font color='#E22D2D'>{leftZombie}</font> <font color='#FFFFE0'>{localizer["ZCount"]}</font></span><br>" +
+            $"<span><font color='#FFFFE0'>{localizer["HumanLeft"]}:</font> <font color='#00FF00'>{humanCount}</font> <font color='#FFFFE0'>{localizer["HCount"]}</font></span><br>" +
+            $"{diffMessage}" +
             $"<span><font color='#FFFFE0'>{currentDay.Storyline}</font></span>";
 
-        if (Controller.PawnIsAlive && pawn.TeamNum == 3)
+        if (_globals.GameStart && controller.PawnIsAlive && pawn.TeamNum == 3)
         {
-
-            if (_globals.GameStart == true)
-            {
-                player.SendMessage(MessageType.CenterHTML, $"{Message}");
-            }
-
+            player.SendMessage(MessageType.CenterHTML, message);
         }
-
     }
 
     private HanZriotDayConfig.Day HudGetCurrentDay(int riotDay)
