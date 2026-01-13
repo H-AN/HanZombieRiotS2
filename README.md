@@ -457,7 +457,7 @@ To compile the v3.1 version plugin, you also need to download the API source cod
 
 ```
 ├── HanZombieRiotS2    → 插件主体文件夹/Plugin main folder
-├── IHanZriotAPI          → API文件夹/API folder
+└── IHanZriotAPI          → API文件夹/API folder
 ```
 编译 主体插件,即可获得 主体插件文件与API文件
 
