@@ -447,3 +447,126 @@ After finishing the final stage, the plugin randomly selects the next map based 
 ```
 
 Note: ZombieScale currently has issues This function is temporarily unavailable.
+
+---
+<div align="center"><h1>V3.1版本 API 使用/API version 3.1 usage</h1></div>
+
+要编译 v3.1版本插件需要同时下载api源码,文件夹与主插件平级
+
+To compile the v3.1 version plugin, you also need to download the API source code; the folder should be at the same level as the main plugin.
+
+```
+├── HanZombieRiotS2    → 插件主体文件夹/Plugin main folder
+├── IHanZriotAPI          → API文件夹/API folder
+```
+编译 主体插件,即可获得 主体插件文件与API文件
+
+Compiling the main plugin will yield the main plugin files and API files.
+
+---
+<div align="center"><h1>其他插件使用API方法/Other plugins use API methods</h1></div>
+
+```
+1. 在头文件内添加 using HanZombieRiotS2; / Add `using HanZombieRiotS2;` to the header file.
+
+2. 在需要使用API的插件csproj文件内添加 / Add the following to the csproj file of the plugin that requires the API:
+
+<ItemGroup>
+		<Reference Include="HanZombieRiotS2">
+		<HintPath>HanZriotAPI.dll</HintPath>
+		<Private>false</Private>
+	</Reference>
+</ItemGroup>
+
+3.其他插件内获取API / Get API within other plugins
+
+public partial class yourplugins(ISwiftlyCore core) : BasePlugin(core)
+{
+    private IHanZriotAPI? _gameApi; //先声明api / First declare the API
+    
+    public override void UseSharedInterface(IInterfaceManager interfaceManager)
+    {
+      if (interfaceManager.HasSharedInterface("zriot"))  //获取api / Get API
+      {
+          _gameApi = interfaceManager.GetSharedInterface<IHanZriotAPI>("zriot");
+          Core.Logger.LogInformation("成功加载僵尸暴动API/Successfully loaded the Zombie Riot API");
+      }
+      else
+      {
+          Core.Logger.LogInformation("加载僵尸暴动API加载失败/Zombie Riot API loading failed");
+      }
+    }
+}
+
+4. 使用API功能(示例) / Using API features (example)
+
+Core.Command.RegisterCommand("sw_zombie", zombie, true);
+
+public void zombie(ICommandContext context)
+{
+    var player = context.Sender;
+    if (player == null || !player.IsValid)
+        return;
+        
+    _gameApi.ZRiot_Zombie(player); //设置某人为丧尸 /Set someone as a zombie
+}
+```
+API功能 / API features
+```
+/// <summary>
+/// Get GameStart.
+/// 获取游戏开始状态.
+/// </summary>
+bool GameStart { get; }
+
+/// <summary>
+/// Get CurrentDay.
+/// 获取当前天数.
+/// </summary>
+int CurrentDay { get; }
+
+/// <summary>
+/// Get NeedKillZombie.
+/// 获取当前需要击杀多少只丧尸.
+/// </summary>
+int NeedKillZombie { get; }
+
+/// <summary>
+/// Get ZombieKill.
+/// 获取当前所有玩家已经击杀了多少只丧尸.
+/// </summary>
+int ZombieKill { get; }
+
+/// <summary>
+/// Get ZombiesLeft.
+/// 获取还剩余多少只丧尸通关.
+/// </summary>
+int ZombiesLeft { get; }
+
+/// <summary>
+/// Get HumansAlive.
+/// 获取当前存活人类数量.
+/// </summary>
+int HumansAlive { get; }
+
+/// <summary>
+/// Get MaxDay.
+/// 获取当前地图最大关卡天数.
+/// </summary>
+int MaxDay { get; }
+
+/// <summary>
+/// change player to human.
+/// 指定某个玩家成为人类.
+/// </summary>
+void ZRiot_Human(IPlayer player);
+
+/// <summary>
+/// change player to human.
+/// 指定某个玩家成为丧尸.
+/// </summary>
+void ZRiot_Zombie(IPlayer player);
+```
+
+
+
