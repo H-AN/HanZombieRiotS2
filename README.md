@@ -478,7 +478,14 @@ Compiling the main plugin will yield the main plugin files and API files.
 	</Reference>
 </ItemGroup>
 
-3.其他插件内获取API / Get API within other plugins
+3. 将 HanZriotAPI.dll 放置在 需要API的插件文件夹内
+
+yourplugins/
+├── HanZriotAPI.dll              # API dll文件 /API dll file
+├── yourplugins.cs          # 你的插件 / yourplugins cs
+└── yourplugins.csproj   # 你的插件项目 /yourplugins csproj
+
+4.其他插件内获取API / Get API within other plugins
 
 public partial class yourplugins(ISwiftlyCore core) : BasePlugin(core)
 {
@@ -498,7 +505,7 @@ public partial class yourplugins(ISwiftlyCore core) : BasePlugin(core)
     }
 }
 
-4. 使用API功能(示例) / Using API features (example)
+5. 使用API功能(示例) / Using API features (example)
 
 Core.Command.RegisterCommand("sw_zombie", zombie, true);
 
@@ -510,6 +517,17 @@ public void zombie(ICommandContext context)
         
     _gameApi.ZRiot_Zombie(player); //设置某人为丧尸 /Set someone as a zombie
 }
+
+6. 运行插件需要放入api dll文件
+
+yourplugins/
+├── yourplugins.dll              # 插件dll / plugins dll
+├── yourplugins.deps.json          # 插件 deps.json  / plugins  deps.json 
+├── yourplugins.pdb          # 插件 pdb  /  plugins pdb 
+└── resources/
+    ├── exports/                # API放置文件夹 / API folder
+    └────── HanZriotAPI.dll          # API dll 文件 / API dll file
+		
 ```
 API功能 / API features
 ```
