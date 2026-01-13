@@ -1,9 +1,11 @@
+using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Spectre.Console;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
+using SwiftlyS2.Shared.ProtobufDefinitions;
 using SwiftlyS2.Shared.SchemaDefinitions;
 using static HanZombieRiotS2.ZombieDataConfig;
 
@@ -101,14 +103,34 @@ public class HanZriotHelpers
     }
 
 
-    public void PlayAmbSound() //播放环境音乐
+    public void PlayAmbSound(string sounds) //播放环境音乐
     {
-        var CFG = _mainConfig.CurrentValue;
-        if (CFG.SoundAmbSound)
+        if (!string.IsNullOrWhiteSpace(sounds))
         {
-            EmitSoundToAll(CFG.SoundEventAmbSound);
+            var toPlay = RandomSelectSound(sounds);
+            if (toPlay != null)
+            {
+                EmitSoundToAll(toPlay);
+            }
         }
     }
+
+    public string? RandomSelectSound(string sound)
+    {
+        if (string.IsNullOrWhiteSpace(sound)) return null;
+
+        var items = sound
+            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .Where(s => !string.IsNullOrEmpty(s))
+            .ToArray();
+
+        if (items.Length == 0) return null;
+
+        return items.Length == 1 ? items[0] : items[Random.Shared.Next(items.Length)];
+    }
+
+
     public void EmitSoundToEntity(IPlayer player, string SoundPath)
     {
         if (!string.IsNullOrEmpty(SoundPath))

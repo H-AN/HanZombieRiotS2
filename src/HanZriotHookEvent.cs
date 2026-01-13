@@ -142,15 +142,19 @@ public class HanZriotEvents
         _core.Scheduler.StopOnMapChange(_globals.SpawnAllZombie);
 
         var CFG = _mainConfig.CurrentValue;
-        if (CFG.SoundRoundstartMusic)
+        if (CFG.SoundRoundstartMusic && !string.IsNullOrWhiteSpace(CFG.SoundEventRoundstartMusic))
         {
-            _helpers.EmitSoundToAll(CFG.SoundEventRoundstartMusic);
+            var RoundstartMusic = _helpers.RandomSelectSound(CFG.SoundEventRoundstartMusic);
+            if (RoundstartMusic != null)
+            {
+                _helpers.EmitSoundToAll(RoundstartMusic);
+            }
         }
-        if (CFG.SoundAmbSound)
+        if (CFG.SoundAmbSound && !string.IsNullOrWhiteSpace(CFG.SoundEventAmbSound))
         {
             _globals.g_hAmbMusic?.Cancel();
             _globals.g_hAmbMusic = null;
-            _globals.g_hAmbMusic = _core.Scheduler.DelayAndRepeatBySeconds(0.1f, CFG.AmbSoundLoopTime, () => _helpers.PlayAmbSound());
+            _globals.g_hAmbMusic = _core.Scheduler.DelayAndRepeatBySeconds(0.1f, CFG.AmbSoundLoopTime, () => _helpers.PlayAmbSound(CFG.SoundEventAmbSound));
             _core.Scheduler.StopOnMapChange(_globals.g_hAmbMusic);
         }
 
@@ -188,9 +192,14 @@ public class HanZriotEvents
                     player.SendMessage(MessageType.CenterHTML, $"{_core.Translation.GetPlayerLocalizer(player)["ZombieStartMove"]}");
                 }
             }
-            if (CFG.SoundZombieStart)
+            if (CFG.SoundZombieStart && !string.IsNullOrWhiteSpace(CFG.SoundEventZombieStart))
             {
-                _helpers.EmitSoundToAll(CFG.SoundEventZombieStart);
+                var ZombieStart = _helpers.RandomSelectSound(CFG.SoundEventZombieStart);
+                if (ZombieStart != null)
+                {
+                    _helpers.EmitSoundToAll(ZombieStart);
+                }
+                
             }
         }
 
@@ -287,21 +296,28 @@ public class HanZriotEvents
 
             if (hitgroup == 1)
             {
-                if (CFG.SoundZombiePain)
+                if (CFG.SoundZombiePain && !string.IsNullOrWhiteSpace(CFG.SoundEventZombiePain))
                 {
-
                     int randomPain = Random.Shared.Next(0, 5);
                     if (randomPain == 1)
                     {
-                        _helpers.EmitSoundToEntity(player, CFG.SoundEventZombiePain);
+                        var PainSounds = _helpers.RandomSelectSound(CFG.SoundEventZombiePain);
+                        if (PainSounds != null)
+                        {
+                            _helpers.EmitSoundToEntity(player, PainSounds);
+                        }
                     }
                 }
             }
             else
             {
-                if (CFG.SoundZombieHurt)
+                if (CFG.SoundZombieHurt && !string.IsNullOrWhiteSpace(CFG.SoundEventZombieHurt))
                 {
-                    _helpers.EmitSoundToEntity(player, CFG.SoundEventZombieHurt);
+                    var HurtSounds = _helpers.RandomSelectSound(CFG.SoundEventZombieHurt);
+                    if (HurtSounds != null)
+                    {
+                        _helpers.EmitSoundToEntity(player, HurtSounds);
+                    }
                 }
 
             }
@@ -373,9 +389,13 @@ public class HanZriotEvents
                         _helpers.GiveCash(attacker, CFG.DeathMoney, "death");
                     }
 
-                    if (CFG.SoundZombieDead)
+                    if (CFG.SoundZombieDead && !string.IsNullOrWhiteSpace(CFG.SoundEventZombieDead))
                     {
-                        _helpers.EmitSoundToEntity(Deather, CFG.SoundEventZombieDead);
+                        var DeadSounds = _helpers.RandomSelectSound(CFG.SoundEventZombieDead);
+                        if (DeadSounds != null)
+                        {
+                            _helpers.EmitSoundToEntity(Deather, DeadSounds);
+                        }
                     }
                     _globals.ZombieKill++;
                     _helpers.UpdateKillCount();

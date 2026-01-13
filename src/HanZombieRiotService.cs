@@ -149,9 +149,13 @@ public class HanZriotService
                 _helpers.EmitSoundToAll(soundList[soundIndex].Trim());
             }
         }
-        else if (currentDisplay == 20 && CFG.Soundremaining)
+        else if (currentDisplay == 20 && CFG.Soundremaining && !string.IsNullOrWhiteSpace(CFG.SoundEventremaining))
         {
-            _helpers.EmitSoundToAll(CFG.SoundEventremaining);
+            var remaining = _helpers.RandomSelectSound(CFG.SoundEventremaining);
+            if (remaining != null)
+            {
+                _helpers.EmitSoundToAll(remaining);
+            }
         }
 
         if (currentDisplay <= 0)
@@ -218,9 +222,13 @@ public class HanZriotService
         _globals.g_DeathCheck?.Cancel();
         _globals.g_DeathCheck = null;
 
-        if (CFG.SoundHumanWins)
+        if (CFG.SoundHumanWins && !string.IsNullOrWhiteSpace(CFG.SoundEventHumanWins))
         {
-            _helpers.EmitSoundToAll(CFG.SoundEventHumanWins);
+            var HumanWins = _helpers.RandomSelectSound(CFG.SoundEventHumanWins);
+            if (HumanWins != null)
+            {
+                _helpers.EmitSoundToAll(HumanWins);
+            }
         }
 
 
@@ -251,9 +259,13 @@ public class HanZriotService
             }
         }
 
-        if (CFG.SoundZombieWins)
+        if (CFG.SoundZombieWins && !string.IsNullOrWhiteSpace(CFG.SoundEventZombieWins))
         {
-            _helpers.EmitSoundToAll(CFG.SoundEventZombieWins);
+            var ZombieWins = _helpers.RandomSelectSound(CFG.SoundEventZombieWins);
+            if (ZombieWins != null)
+            {
+                _helpers.EmitSoundToAll(ZombieWins);
+            }
         }
 
         _globals.g_DeathCheck?.Cancel();

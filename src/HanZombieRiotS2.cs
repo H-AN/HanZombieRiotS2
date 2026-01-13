@@ -6,13 +6,14 @@ using Microsoft.Extensions.Options;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Events;
 using SwiftlyS2.Shared.Plugins;
+using SwiftlyS2.Shared.SchemaDefinitions;
 
 
 namespace HanZombieRiotS2;
 
 [PluginMetadata(
     Id = "HanZombieRiotS2",
-    Version = "3.0.0",
+    Version = "3.1.0",
     Name = "僵尸暴动 for Sw2/HanZombieRiotS2",
     Author = "H-AN",
     Description = "CS2僵尸暴动 SW2版本 CS2 zombieriot for SW2.")]
@@ -28,8 +29,6 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
     private HanZriotHelpers _Helpers = null!;
     private HanZriotGlobals _Globals = null!;
     private HanZriotCommands _Commands = null!;
-
-
     public override void Load(bool hotReload)
     {
 
@@ -41,6 +40,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 
         var collection = new ServiceCollection();
         collection.AddSwiftly(Core);
+        collection.AddSingleton<HanZriotAPI>();
 
         collection
             .AddOptionsWithValidateOnStart<HanZriotCFG>()
@@ -81,11 +81,18 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
         Core.Event.OnMapLoad += Event_OnMapLoad;
         _Commands.Command();
         _Events.HookEvents();
+
+        
     }
 
     public override void Unload()
     {
         ServiceProvider!.Dispose();
+    }
+
+    public override void ConfigureSharedInterface(IInterfaceManager interfaceManager)
+    {
+        interfaceManager.AddSharedInterface<IHanZriotAPI, HanZriotAPI>("zriot", ServiceProvider!.GetRequiredService<HanZriotAPI>());
     }
 
     private void Event_OnMapLoad(IOnMapLoadEvent @event)

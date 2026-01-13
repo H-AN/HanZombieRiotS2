@@ -79,7 +79,7 @@ public class HanZriotHud
         }
     }
 
-    private HanZriotDayConfig.Day HudGetCurrentDay(int riotDay)
+    public HanZriotDayConfig.Day HudGetCurrentDay(int riotDay)
     {
         var config = _dayConfig.GetConfig(); //CurrentValue;
 
