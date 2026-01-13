@@ -164,7 +164,14 @@ public class HanZriotService
             _globals.g_hCountdown = null;
             _globals.GameStart = true;
             _helpers.SetAllZombieUnFreeze();
-            if (CFG.SoundZombieStart) _helpers.EmitSoundToAll(CFG.SoundEventZombieStart);
+            if (CFG.SoundZombieStart && !string.IsNullOrWhiteSpace(CFG.SoundEventZombieStart))
+            {
+                var ZombieStart = _helpers.RandomSelectSound(CFG.SoundEventZombieStart);
+                if (ZombieStart != null)
+                {
+                    _helpers.EmitSoundToAll(ZombieStart);
+                }
+            }
             return;
         }
 
@@ -330,4 +337,5 @@ public class HanZriotService
             _globals.GameStart = false;
         }
     }
+
 }
