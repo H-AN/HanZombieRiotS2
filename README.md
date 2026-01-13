@@ -16,7 +16,20 @@
   
 
 </div>
+
+<div align="center">
+	
 ---
+
+丧尸音效扩展选装/Zombie sound effects expansion option 
+
+https://github.com/H-AN/HanZombieSounds
+
+---
+
+<div align="center">
+
+	
 使用此插件 最好使用 +game_type 0 +game_mode 0 启动服务器 
 
 并在 game\csgo\cfg\gamemode_casual.cfg 
