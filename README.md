@@ -18,7 +18,7 @@
 </div>
 
 <div align="center">
-	
+
 ---
 
 丧尸音效扩展选装/Zombie sound effects expansion option 
@@ -26,7 +26,7 @@
 https://github.com/H-AN/HanZombieSounds
 
 ---
-
+</div>
 <div align="center">
 
 	
@@ -41,7 +41,7 @@ https://github.com/H-AN/HanZombieSounds
 在 game\csgo\cfg\server.cfg 中  
 
 写入 bot_join_team T 和 mp_limitteams 0
-
+</div>
 ---
 
 📦 创意工坊示例（Zombie 模型/音效等）
