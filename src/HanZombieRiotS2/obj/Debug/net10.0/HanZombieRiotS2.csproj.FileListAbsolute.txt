@@ -1,0 +1,15 @@
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\HanZombieRiotS2.csproj.AssemblyReference.cache
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\HanZombieRiotS2.GeneratedMSBuildEditorConfig.editorconfig
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\HanZombieRiotS2.csproj.CoreCompileInputs.cache
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\HanZombieRiotS2.sourcelink.json
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\bin\Debug\net10.0\HanZombieRiotS2.deps.json
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\bin\Debug\net10.0\HanZombieRiotS2.dll
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\bin\Debug\net10.0\HanZombieRiotS2.pdb
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\bin\Debug\net10.0\HanZriotAPI.dll
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\bin\Debug\net10.0\HanZriotAPI.pdb
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\bin\Debug\net10.0\HanZriotAPI.xml
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\HanZombi.48151BB6.Up2Date
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\HanZombieRiotS2.dll
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\refint\HanZombieRiotS2.dll
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\HanZombieRiotS2.pdb
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\HanZombieRiotS2\obj\Debug\net10.0\ref\HanZombieRiotS2.dll

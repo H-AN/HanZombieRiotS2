@@ -1,0 +1,15 @@
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\bin\Debug\net10.0\HanZriotAPI.deps.json
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\bin\Debug\net10.0\HanZriotAPI.dll
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\bin\Debug\net10.0\HanZriotAPI.pdb
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\bin\Debug\net10.0\HanZriotAPI.xml
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\IHanZriotAPI.csproj.AssemblyReference.cache
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\IHanZriotAPI.GeneratedMSBuildEditorConfig.editorconfig
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\IHanZriotAPI.AssemblyInfoInputs.cache
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\IHanZriotAPI.AssemblyInfo.cs
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\IHanZriotAPI.csproj.CoreCompileInputs.cache
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\IHanZriotAPI.sourcelink.json
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\HanZriotAPI.dll
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\refint\HanZriotAPI.dll
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\HanZriotAPI.xml
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\HanZriotAPI.pdb
+E:\css\CS2\steamcmd\steamapps\common\cssharp\chajian\swiftlys2-master\plugins\git\HanZombieRiotS2\src\IHanZriotAPI\obj\Debug\net10.0\ref\HanZriotAPI.dll
