@@ -10,7 +10,7 @@
         "dependencies": {
           "HanZriotAPI": "1.0.0",
           "Microsoft.Extensions.Options.DataAnnotations": "8.0.0",
-          "SwiftlyS2.CS2": "1.1.0",
+          "SwiftlyS2.CS2": "1.2.0",
           "HanZriotAPI.Reference": "1.0.0.0"
         },
         "runtime": {
@@ -448,6 +448,17 @@
           }
         }
       },
+      "Semver/3.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "10.0.0"
+        },
+        "runtime": {
+          "lib/net5.0/Semver.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.0.0.0"
+          }
+        }
+      },
       "Spectre.Console/0.51.1": {
         "runtime": {
           "lib/net9.0/Spectre.Console.dll": {
@@ -486,7 +497,7 @@
           }
         }
       },
-      "SwiftlyS2.CS2/1.1.0": {
+      "SwiftlyS2.CS2/1.2.0": {
         "dependencies": {
           "Dapper": "2.1.66",
           "McMaster.NETCore.Plugins": "2.0.0",
@@ -501,6 +512,7 @@
           "Mono.Cecil": "0.11.6",
           "MySqlConnector": "2.4.0",
           "Npgsql": "9.0.3",
+          "Semver": "3.0.0",
           "Spectre.Console": "0.51.1",
           "System.Data.SQLite.Core": "1.0.119",
           "Tomlyn": "0.17.0",
@@ -508,8 +520,8 @@
         },
         "runtime": {
           "lib/net10.0/SwiftlyS2.CS2.dll": {
-            "assemblyVersion": "1.1.0.0",
-            "fileVersion": "1.1.0.0"
+            "assemblyVersion": "1.2.0.0",
+            "fileVersion": "1.2.0.0"
           }
         }
       },
@@ -563,7 +575,7 @@
       "HanZriotAPI/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Options.DataAnnotations": "8.0.0",
-          "SwiftlyS2.CS2": "1.1.0"
+          "SwiftlyS2.CS2": "1.2.0"
         },
         "runtime": {
           "HanZriotAPI.dll": {
@@ -818,6 +830,13 @@
       "path": "npgsql/9.0.3",
       "hashPath": "npgsql.9.0.3.nupkg.sha512"
     },
+    "Semver/3.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-9jZCicsVgTebqkAujRWtC9J1A5EQVlu0TVKHcgoCuv345ve5DYf4D1MjhKEnQjdRZo6x/vdv6QQrYFs7ilGzLA==",
+      "path": "semver/3.0.0",
+      "hashPath": "semver.3.0.0.nupkg.sha512"
+    },
     "Spectre.Console/0.51.1": {
       "type": "package",
       "serviceable": true,
@@ -832,12 +851,12 @@
       "path": "stub.system.data.sqlite.core.netstandard/1.0.119",
       "hashPath": "stub.system.data.sqlite.core.netstandard.1.0.119.nupkg.sha512"
     },
-    "SwiftlyS2.CS2/1.1.0": {
+    "SwiftlyS2.CS2/1.2.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-mxTUpd/Whjg2P5SNxEgQwzIAlz1e2dCl+w+p6ydRcJ/jIGU91TNr07tFpfeNi1VovJDxhdlFUB2WRT3qWL6Img==",
-      "path": "swiftlys2.cs2/1.1.0",
-      "hashPath": "swiftlys2.cs2.1.1.0.nupkg.sha512"
+      "sha512": "sha512-VbeUGxPWqv3bm8RKh2tAkPUAXDTFfry8xYlj8190F92q0MjqEhQyCx3dRFbKW/FHn861sh3BT8AQkq5yiAR0dQ==",
+      "path": "swiftlys2.cs2/1.2.0",
+      "hashPath": "swiftlys2.cs2.1.2.0.nupkg.sha512"
     },
     "System.Data.SQLite.Core/1.0.119": {
       "type": "package",
