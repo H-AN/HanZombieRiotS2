@@ -274,8 +274,9 @@ public class HanZriotCommands
                             var targetController = target.Controller;
                             if (targetController != null && targetController.IsValid && targetController.PlayerName == targetName)
                             {
+                                _globals.BeAZombie[player.PlayerID] = -1;
                                 target.ChangeTeam(Team.T);
-                                target.SendMessage(MessageType.Chat, $"{_globals.Countdown} {_core.Translation.GetPlayerLocalizer(player)["ForceJoinZombie"]}");
+                                target.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["ForceJoinZombie"]}");
                             }
                         }
                     }

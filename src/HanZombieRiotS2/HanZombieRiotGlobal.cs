@@ -45,11 +45,7 @@ public class HanZriotGlobals
     public CancellationTokenSource? g_HUDTimer { get; set; } = null;
     public CancellationTokenSource? g_DeathCountDown { get; set; } = null;
 
-
-
     public Dictionary<int, ZombieRegenState> g_ZombieRegenStates = new();
-
-    public readonly Dictionary<IPlayer, int> jumpBoostState = new();
 
     public CancellationTokenSource? g_ZombieRegenTimer = null;
 

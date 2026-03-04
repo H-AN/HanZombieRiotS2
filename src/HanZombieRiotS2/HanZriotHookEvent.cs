@@ -46,8 +46,6 @@ public class HanZriotEvents
         _core.GameEvent.HookPre<EventPlayerHurt>(OnPlayerHurt);
         _core.GameEvent.HookPre<EventPlayerDeath>(OnPlayerDeath);
         _core.GameEvent.HookPre<EventPlayerSpawn>(OnPlayerSpawn);
-        _core.GameEvent.HookPre<EventPlayerJump>(OnPlayerJump);
-
         _core.GameEvent.HookPre<EventWeaponFire>(OnWeaponFire);
 
 
@@ -58,9 +56,6 @@ public class HanZriotEvents
         _core.Event.OnEntityTakeDamage += Event_OnEntityTakeDamage;
         _core.Event.OnTick += Event_OnTick;
         _core.Event.OnWeaponServicesCanUseHook += Event_OnWeaponServicesCanUseHook;
-
-        _core.Event.OnTick += Event_OnTickJump;
-
         _core.Event.OnEntityTakeDamage += Event_Protect;
 
     }
@@ -126,6 +121,7 @@ public class HanZriotEvents
         _globals.SpawnAllZombie = null;
         _globals.SpawnAllZombie = _core.Scheduler.DelayAndRepeatBySeconds(0.5f, 5.0f, () =>
         {
+            _helpers.ChangeBotTeam();
             _helpers.RespawnAllZombie();
         });
         _core.Scheduler.StopOnMapChange(_globals.SpawnAllZombie);
@@ -134,9 +130,8 @@ public class HanZriotEvents
 
         _globals.g_DeathCheck?.Cancel();
         _globals.g_DeathCheck = null;
-        _globals.SpawnAllZombie = _core.Scheduler.DelayAndRepeatBySeconds(0.2f, 3.0f, () =>
+        _globals.g_DeathCheck = _core.Scheduler.RepeatBySeconds(0.3f, () =>
         {
-            _helpers.ChangeBotTeam();
             _services.CheckHumanAlive();
         });
         _core.Scheduler.StopOnMapChange(_globals.SpawnAllZombie);
@@ -180,7 +175,7 @@ public class HanZriotEvents
                     continue;
 
                 if (!player.IsFakeClient)
-                    continue; // 只处理玩家
+                    continue; 
 
                 var pawn = player.PlayerPawn;
                 if (pawn == null || !pawn.IsValid)
@@ -248,25 +243,19 @@ public class HanZriotEvents
 
     private HookResult OnPlayerHurt(EventPlayerHurt @event)
     {
-        var clientId = @event.UserId;
+        var player = @event.UserIdPlayer;
+        if (player == null || !player.IsValid)
+            return HookResult.Continue;
 
         var playerController = @event.UserIdController;
         if (playerController == null || !playerController.IsValid)
-            return HookResult.Continue;
-
-        IPlayer player = _core.PlayerManager.GetPlayer(clientId);
-
-        if (player == null || !player.IsValid)
             return HookResult.Continue;
 
         var playerPawn = player.PlayerPawn;
         if (playerPawn == null || !playerPawn.IsValid)
             return HookResult.Continue;
 
-        var attackerId = @event.Attacker;
-
-        IPlayer attacker = _core.PlayerManager.GetPlayer(attackerId);
-
+        var attacker = @event.AttackerPlayer;
         if (attacker == null || !attacker.IsValid)
             return HookResult.Continue;
 
@@ -340,15 +329,16 @@ public class HanZriotEvents
 
     private HookResult OnPlayerDeath(EventPlayerDeath @event)
     {
-        var DeatherId = @event.UserId;
-        var attackerId = @event.Attacker;
+        var attacker = @event.AttackerPlayer;
+        if (attacker == null || !attacker.IsValid)
+            return HookResult.Continue;
+
+        var Deather = @event.UserIdPlayer;
+        if (Deather == null || !Deather.IsValid)
+            return HookResult.Continue;
 
         var DeatherController = @event.UserIdController;
         if (DeatherController == null || !DeatherController.IsValid)
-            return HookResult.Continue;
-
-        IPlayer Deather = _core.PlayerManager.GetPlayer(DeatherId);
-        if (Deather == null || !Deather.IsValid)
             return HookResult.Continue;
 
         var DeatherPawn = Deather.PlayerPawn;
@@ -381,11 +371,6 @@ public class HanZriotEvents
                     _core.Scheduler.DelayBySeconds(1.0f, () => { _helpers.RespawnClient(DeatherController); });
                     if (CFG.DeathMoney > 0)
                     {
-
-                        var attacker = _core.PlayerManager.GetPlayer(attackerId);
-                        if (attacker == null || !attacker.IsValid)
-                            return;
-
                         _helpers.GiveCash(attacker, CFG.DeathMoney, "death");
                     }
 
@@ -471,14 +456,12 @@ public class HanZriotEvents
 
     public HookResult OnPlayerSpawn(EventPlayerSpawn @event)
     {
-        var clientId = @event.UserId;
-
-        IPlayer player = _core.PlayerManager.GetPlayer(clientId);
+        var player = @event.UserIdPlayer;
         if (player == null || !player.IsValid)
             return HookResult.Continue;
 
-        var clienpawn = player.PlayerPawn;
-        if (clienpawn == null || !clienpawn.IsValid)
+        var playerpawn = player.PlayerPawn;
+        if (playerpawn == null || !playerpawn.IsValid)
             return HookResult.Continue;
 
         var playerController = player.Controller;
@@ -502,14 +485,14 @@ public class HanZriotEvents
                     else
                     {
                         _globals.RebornSec[player.PlayerID] = (int)Math.Ceiling(CFG.HumanRebornSec);
-                        if (clienpawn.TeamNum != 3)
+                        if (playerpawn.TeamNum != 3)
                         {
                             player.SwitchTeam(Team.CT);
                         }
 
                         if (CFG.SpawnProtect)
                         {
-                            if (clienpawn != null)
+                            if (playerpawn != null)
                             {
                                 _core.Scheduler.DelayBySeconds(0.2f, () => { _globals.InProtect[player.PlayerID] = true; });
                             }
@@ -525,7 +508,7 @@ public class HanZriotEvents
                 else
                 {
                     _globals.RebornSec[player.PlayerID] = (int)Math.Ceiling(CFG.HumanRebornSec);
-                    if (clienpawn.TeamNum != 3)
+                    if (playerpawn.TeamNum != 3)
                     {
                         player.SwitchTeam(Team.CT);
                     }
@@ -534,14 +517,14 @@ public class HanZriotEvents
             else
             {
                 _globals.RebornSec[player.PlayerID] = (int)Math.Ceiling(CFG.HumanRebornSec);
-                if (clienpawn.TeamNum != 3)
+                if (playerpawn.TeamNum != 3)
                 {
                     player.SwitchTeam(Team.CT);
                 }
 
                 if (CFG.SpawnProtect)
                 {
-                    if (clienpawn != null)
+                    if (playerpawn != null)
                         _core.Scheduler.DelayBySeconds(0.2f, () => { _globals.InProtect[player.PlayerID] = true; });
 
                     _globals.SpawnProtect[player.PlayerID]?.Cancel();
@@ -568,7 +551,7 @@ public class HanZriotEvents
         }
         else
         {
-            if (clienpawn.TeamNum != 2)
+            if (playerpawn.TeamNum != 2)
             {
                 player.SwitchTeam(Team.T);
             }
@@ -620,7 +603,7 @@ public class HanZriotEvents
         if (VictimController == null || !VictimController.IsValid)
             return;
 
-        var VictimPlayer = HanExtensions.GetPlayerByController(VictimController, _core);
+        var VictimPlayer = _core.PlayerManager.GetPlayerFromController(VictimController);
         if (VictimPlayer == null || !VictimPlayer.IsValid)
             return;
 
@@ -636,7 +619,7 @@ public class HanZriotEvents
         if (AttackerController == null || !AttackerController.IsValid)
             return;
 
-        var AttackerPlayer = HanExtensions.GetPlayerByController(AttackerController, _core);
+        var AttackerPlayer = _core.PlayerManager.GetPlayerFromController(AttackerController);
         if (AttackerPlayer == null || !AttackerPlayer.IsValid)
             return;
 
@@ -688,80 +671,6 @@ public class HanZriotEvents
         }
 
     }
-
-    public HookResult OnPlayerJump(EventPlayerJump @event)
-    {
-        var player = @event.UserIdPlayer;
-        if (player == null || !player.IsValid)
-            return HookResult.Continue;
-
-        var pawn = @event.UserIdPawn;
-        if (pawn == null || !pawn.IsValid)
-            return HookResult.Continue;
-
-        int now = _core.Engine.GlobalVars.TickCount;
-        int duration = 8; // 8 Tick ≈ 0.12 秒
-
-        // 持续 8 Tick（大约 0.12 秒）
-        _globals.jumpBoostState[player] = now + duration;
-
-        return HookResult.Continue;
-    }
-
-    private void Event_OnTickJump()
-    {
-        var ZombieCFG = _zombieConfig.GetConfig();
-        var ZombieList = ZombieCFG.ZombieList;
-
-        int nowTick = _core.Engine.GlobalVars.TickCount;
-
-        foreach (var kv in new Dictionary<IPlayer, int>(_globals.jumpBoostState))
-        {
-            var player = kv.Key;
-            if (player == null || !player.IsValid)
-                return;
-
-            var pawn = player.PlayerPawn;
-            if (pawn == null || !pawn.IsValid)
-                return;
-
-            var Controller = player.Controller;
-            if (Controller == null || !Controller.IsValid)
-                return;
-
-            var ControllerEntity = Controller.Entity;
-            if (ControllerEntity == null || !ControllerEntity.IsValid)
-                return;
-
-            int endTick = kv.Value;
-
-            if (player == null || !player.IsValid)
-            {
-                _globals.jumpBoostState.Remove(player);
-                continue;
-            }
-
-            if (pawn.TeamNum == 2)
-            {
-                foreach (var zombie in ZombieList)
-                {
-                    if (ControllerEntity.Name == zombie.Name)
-                    {
-                        if (nowTick <= endTick)
-                        {
-                            pawn.AbsVelocity.Z = 300.0f * zombie.Gravity;
-                        }
-                        else
-                        {
-                            _globals.jumpBoostState.Remove(player);
-                        }
-
-                    }
-                }
-            }
-        }
-    }
-
     private HookResult OnWeaponFire(EventWeaponFire @event)
     {
         var player = @event.UserIdPlayer;
@@ -799,7 +708,7 @@ public class HanZriotEvents
         if (VictimController == null || !VictimController.IsValid)
             return;
 
-        var VictimPlayer = HanExtensions.GetPlayerByController(VictimController, _core);
+        var VictimPlayer = _core.PlayerManager.GetPlayerFromController(VictimController);
         if (VictimPlayer == null || !VictimPlayer.IsValid)
             return;
 
@@ -815,7 +724,7 @@ public class HanZriotEvents
         if (AttackerController == null || !AttackerController.IsValid)
             return;
 
-        var AttackerPlayer = HanExtensions.GetPlayerByController(AttackerController, _core);
+        var AttackerPlayer = _core.PlayerManager.GetPlayerFromController(AttackerController);
         if (AttackerPlayer == null || !AttackerPlayer.IsValid)
             return;
 

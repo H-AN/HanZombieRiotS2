@@ -5,6 +5,7 @@ using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
 using SwiftlyS2.Shared.SchemaDefinitions;
+using static HanZombieRiotS2.ZombieDataConfig;
 
 
 namespace HanZombieRiotS2;
@@ -65,7 +66,6 @@ public class HanZriotService
         var zombiesForLevel = _helpers.GetZombiesForCurrentLevel(currentDayIndex); // 传递索引
 
 
-
         // 随机选择一个僵尸
         if (zombiesForLevel.Count > 0)
         {
@@ -98,14 +98,9 @@ public class HanZriotService
 
 
             }
-            if (randomZombie.Speed > 0)
-            {
-                clientpawn.VelocityModifier = randomZombie.Speed;
-            }
-            else
-            {
-                clientpawn.VelocityModifier = 1.0f;
-            }
+            
+            clientpawn.VelocityModifier = randomZombie.Speed > 0 ? randomZombie.Speed : 1.0f;
+            clientpawn.ActualGravityScale = randomZombie.Gravity > 0 ? randomZombie.Gravity : 0.8f;
 
             if (randomZombie.HealthRevive > 0)
             {
