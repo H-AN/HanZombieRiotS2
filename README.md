@@ -48,13 +48,15 @@ https://github.com/H-AN/HanZombieSounds
 
 
 插件可结合以下创意工坊资源使用（示例）：
-3474477701  3450081072 3603675956 
 ```
+音效 : 3644652779
+丧尸模型 : 3655494223
+
 要使用创意工坊资源,需要服务器安装metamod插件 multiaddonmanager 来管理服务器和玩家使用下载和安装创意工坊资源
 
 安装multiaddonmanager插件后 在game\csgo\cfg\multiaddonmanager\multiaddonmanager.cfg配置文件中
  
-找到第一行 mm_extra_addons  "3474477701,3450081072,3603675956"
+找到第一行 mm_extra_addons  "3644652779,3655494223"
 
 把资源ID填写上去 等待服务器下载资源完毕 玩家进服会自动下载资源
 
