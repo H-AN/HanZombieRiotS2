@@ -275,8 +275,10 @@ bot_join_team T and mp_limitteams 0
 📦 Workshop Examples (Zombie models / sounds)
 
 You may use the plugin with the following workshop resources:
-3474477701  3450081072 3603675956 
 ```
+sounds : 3644652779
+zombie models : 3655494223
+
 To use Workshop resources, your server must install the Metamod plugin: multiaddonmanager
 
 which handles downloading and installing Workshop addons for both the server and players.
@@ -285,7 +287,7 @@ After installing the multiaddonmanager plugin, open the configuration file:
 
 game\csgo\cfg\multiaddonmanager\multiaddonmanager.cfg
 
-Locate the first line: mm_extra_addons  "3474477701,3450081072,3603675956"
+Locate the first line: mm_extra_addons  "3644652779,3655494223"
 
 Add the Workshop IDs you want to use, then wait for the server to finish downloading the addons.
 
