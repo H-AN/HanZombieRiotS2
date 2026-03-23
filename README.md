@@ -20,6 +20,8 @@
   <span>(最好的AI模型供应商,点击图标进入官网)</span>
 </div>
 
+---
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z31PY52N)
   
 
