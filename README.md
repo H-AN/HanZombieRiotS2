@@ -66,7 +66,7 @@ https://github.com/H-AN/HanZombieSounds
 
 安装multiaddonmanager插件后 在game\csgo\cfg\multiaddonmanager\multiaddonmanager.cfg配置文件中
  
-找到第一行 mm_extra_addons  "3644652779,3655494223"
+找到第一行 mm_extra_addons  "3644652779"
 
 把资源ID填写上去 等待服务器下载资源完毕 玩家进服会自动下载资源
 
@@ -298,7 +298,7 @@ After installing the multiaddonmanager plugin, open the configuration file:
 
 game\csgo\cfg\multiaddonmanager\multiaddonmanager.cfg
 
-Locate the first line: mm_extra_addons  "3644652779,3655494223"
+Locate the first line: mm_extra_addons  "3644652779"
 
 Add the Workshop IDs you want to use, then wait for the server to finish downloading the addons.
 
