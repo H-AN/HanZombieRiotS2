@@ -6,23 +6,28 @@
       "BurnDamage": 5,
       "BurnDuration": 10,
       "BurnParticle": "particles/burning_fx/env_fire_large.vpcf",
+      "BurnSound": "han.zombieplague.zburn",
       "Enabled": true,
       "GiveOnSpawn": false,
       "AllowBots": false,
       "RoundLimit": 0,
       "LifeLimit": 0,
-      "Sound": ""
+      "Sound": "han.zombieplague.grenadedote",
+      "PrecacheSoundEvent": "soundevents/game_sounds_weapons.vsndevts"
     },
     "LightGrenade": {
       "Duration": 10,
       "LightRadius": 800,
       "Brightness": 5,
+      "FreezeSound": "Glass.BulletImpact",
+      "UnfreezeSound": "GlassBottle.BulletImpact",
       "Enabled": true,
       "GiveOnSpawn": false,
       "AllowBots": false,
       "RoundLimit": 0,
       "LifeLimit": 0,
-      "Sound": ""
+      "Sound": "C4.ExplodeTriggerTrip",
+      "PrecacheSoundEvent": "soundevents/game_sounds_physics.vsndevts"
     },
     "FreezeGrenade": {
       "FreezeRadius": 350,
@@ -32,7 +37,8 @@
       "AllowBots": false,
       "RoundLimit": 0,
       "LifeLimit": 0,
-      "Sound": ""
+      "Sound": "han.zombieplague.grenadedote",
+      "PrecacheSoundEvent": "soundevents/game_sounds_player.vsndevts"
     }
   }
 }

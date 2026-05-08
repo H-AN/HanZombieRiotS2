@@ -724,9 +724,9 @@ public class HanZriotEvents
             }
         }
 
-        AddGrenadeResourceIfPresent(@event, grenadeConfig.FireGrenade.Sound);
-        AddGrenadeResourceIfPresent(@event, grenadeConfig.LightGrenade.Sound);
-        AddGrenadeResourceIfPresent(@event, grenadeConfig.FreezeGrenade.Sound);
+        AddGrenadeResourceIfPresent(@event, grenadeConfig.FireGrenade.PrecacheSoundEvent);
+        AddGrenadeResourceIfPresent(@event, grenadeConfig.LightGrenade.PrecacheSoundEvent);
+        AddGrenadeResourceIfPresent(@event, grenadeConfig.FreezeGrenade.PrecacheSoundEvent);
         AddGrenadeResourceIfPresent(@event, grenadeConfig.FireGrenade.BurnParticle);
         AddGrenadeResourceIfPresent(@event, CFG.HumandefaultModel);
         @event.AddItem("particles/ui/hud/ui_map_def_utility_trail.vpcf");
@@ -770,7 +770,7 @@ public class HanZriotEvents
         foreach (var zombie in _helpers.GetPlayersInRadius(position, config.ExplosionRadius, 2))
         {
             _helpers.ApplyDamage(thrower, zombie, config.ExplosionDamage, DamageTypes_t.DMG_BLAST);
-            _helpers.ApplySpecialGrenadeBurn(thrower, zombie, config.BurnDamage, config.BurnDuration, config.BurnParticle, string.Empty);
+            _helpers.ApplySpecialGrenadeBurn(thrower, zombie, config.BurnDamage, config.BurnDuration, config.BurnParticle, config.BurnSound);
         }
 
         return HookResult.Continue;
@@ -842,7 +842,7 @@ public class HanZriotEvents
         _helpers.DrawExpandingRing(position, config.FreezeRadius, 0, 0, 255, 125);
         foreach (var zombie in _helpers.GetPlayersInRadius(position, config.FreezeRadius, 2))
         {
-            _helpers.ApplyFreezeGrenade(zombie, config.FreezeDuration);
+            _helpers.ApplyFreezeGrenade(zombie, config.FreezeDuration, config.FreezeSound, config.UnfreezeSound);
         }
 
         RemoveSmokeGrenadeEntity(@event.EntityID);

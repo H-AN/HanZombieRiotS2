@@ -14,6 +14,7 @@ public class HanZriotGrenadeGroupConfig
         public int RoundLimit { get; set; } = 0;
         public int LifeLimit { get; set; } = 0;
         public string Sound { get; set; } = string.Empty;
+        public string PrecacheSoundEvent { get; set; } = string.Empty;
     }
 
     public sealed class FireGrenadeConfig : GrenadeRuleConfig
@@ -23,6 +24,7 @@ public class HanZriotGrenadeGroupConfig
         public float BurnDamage { get; set; } = 0f;
         public float BurnDuration { get; set; } = 0f;
         public string BurnParticle { get; set; } = "particles/burning_fx/env_fire_large.vpcf";
+        public string BurnSound { get; set; } = string.Empty;
     }
 
     public sealed class LightGrenadeConfig : GrenadeRuleConfig
@@ -36,5 +38,7 @@ public class HanZriotGrenadeGroupConfig
     {
         public float FreezeRadius { get; set; } = 300f;
         public float FreezeDuration { get; set; } = 4f;
+        public string FreezeSound { get; set; } = string.Empty;
+        public string UnfreezeSound { get; set; } = string.Empty;
     }
 }

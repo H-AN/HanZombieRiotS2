@@ -298,29 +298,17 @@ public class HanZriotHelpers
         return weighted[^1].Zombie;
     }
 
-
-    private bool TryGetSoundSourceEntityIndex(IPlayer player, out int sourceEntityIndex)
-    {
-        sourceEntityIndex = -1;
-
-        if (player is not { IsValid: true })
-            return false;
-
-        var pawn = player.PlayerPawn;
-        if (pawn is not { IsValid: true })
-            return false;
-
-        sourceEntityIndex = (int)pawn.Index;
-        return true;
-    }
-
     public void EmitSoundToEntity(IPlayer player, string SoundPath)
     {
-        if (string.IsNullOrEmpty(SoundPath) || !TryGetSoundSourceEntityIndex(player, out int sourceEntityIndex))
+        if (string.IsNullOrEmpty(SoundPath))
+            return;
+
+        var pwan = player.PlayerPawn;
+        if (pwan == null || !pwan.IsValid)
             return;
 
         var sound = new SwiftlyS2.Shared.Sounds.SoundEvent(SoundPath, 1.0f, 1.0f);
-        sound.SourceEntityIndex = sourceEntityIndex;
+        sound.SourceEntityIndex = (int)pwan.Index;;
         sound.Recipients.AddAllPlayers();
         _core.Scheduler.NextTick(() =>
         {
@@ -744,7 +732,7 @@ public class HanZriotHelpers
         beam.EndPosUpdated();
     }
 
-    public void ApplyFreezeGrenade(IPlayer player, float duration)
+    public void ApplyFreezeGrenade(IPlayer player, float duration, string freezeSoundPath = "", string unfreezeSoundPath = "")
     {
         if (player is not { IsValid: true } || duration <= 0f)
             return;
@@ -759,6 +747,15 @@ public class HanZriotHelpers
 
         ClearFreezeGrenade(playerId, unfreeze: false);
         SetFreezeState(player, true);
+
+        if (!string.IsNullOrWhiteSpace(freezeSoundPath))
+        {
+            var freezeSound = RandomSelectSound(freezeSoundPath);
+            if (!string.IsNullOrWhiteSpace(freezeSound))
+            {
+                EmitSoundToEntity(player, freezeSound);
+            }
+        }
 
         var timer = _core.Scheduler.DelayBySeconds(duration, () =>
         {
@@ -775,6 +772,15 @@ public class HanZriotHelpers
                 return;
 
             SetFreezeState(currentPlayer, false);
+
+            if (!string.IsNullOrWhiteSpace(unfreezeSoundPath))
+            {
+                var unfreezeSound = RandomSelectSound(unfreezeSoundPath);
+                if (!string.IsNullOrWhiteSpace(unfreezeSound))
+                {
+                    EmitSoundToEntity(currentPlayer, unfreezeSound);
+                }
+            }
         });
 
         _core.Scheduler.StopOnMapChange(timer);
