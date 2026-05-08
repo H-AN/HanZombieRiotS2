@@ -3,6 +3,7 @@ namespace HanZombieRiotS2;
 public class HanZriotCFG
 {
     public int useworkshopmap { get; set; } = 0;
+    public string HumandefaultModel { get; set; } = string.Empty;
     public bool HurtMoney { get; set; } = true;
     public bool HurtMoneyMessage { get; set; } = true;
     public int DeathMoney { get; set; } = 100;

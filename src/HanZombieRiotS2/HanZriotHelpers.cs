@@ -1,7 +1,6 @@
 using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Spectre.Console;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
@@ -50,6 +49,128 @@ public class HanZriotHelpers
     public bool IsRoundGenerationCurrent(int expectedRoundGeneration)
     {
         return expectedRoundGeneration == _globals.RoundGeneration;
+    }
+
+    public bool TryResolveCurrentPlayer(int playerId, ulong expectedSessionId, int expectedRoundGeneration, out IPlayer player, bool requireAlive = false)
+    {
+        player = null!;
+
+        if (!IsRoundGenerationCurrent(expectedRoundGeneration))
+            return false;
+
+        var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+        if (currentPlayer == null || !currentPlayer.IsValid || !_core.PlayerManager.IsPlayerOnline(playerId))
+            return false;
+
+        if (expectedSessionId != 0 && currentPlayer.SessionId != expectedSessionId)
+            return false;
+
+        if (requireAlive)
+        {
+            var controller = currentPlayer.Controller;
+            if (controller == null || !controller.IsValid || controller.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+                return false;
+        }
+
+        player = currentPlayer;
+        return true;
+    }
+
+    public bool TryResolveCurrentPlayerPawn(int playerId, ulong expectedSessionId, int expectedRoundGeneration, out IPlayer player, out CCSPlayerPawn pawn, bool requireAlive = false)
+    {
+        player = null!;
+        pawn = null!;
+
+        if (!TryResolveCurrentPlayer(playerId, expectedSessionId, expectedRoundGeneration, out player, requireAlive))
+            return false;
+
+        var currentPawn = player.PlayerPawn;
+        if (currentPawn == null || !currentPawn.IsValid)
+            return false;
+
+        if (requireAlive && currentPawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+            return false;
+
+        pawn = currentPawn;
+        return true;
+    }
+
+    public void ApplyHumanDefaultModel(IPlayer player)
+    {
+        if (player is not { IsValid: true })
+            return;
+
+        string modelPath = _mainConfig.CurrentValue.HumandefaultModel;
+        if (string.IsNullOrWhiteSpace(modelPath))
+            return;
+
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid)
+            return;
+
+        SetPlayerModelFixed(pawn, modelPath);
+    }
+
+    private bool TryGetPlayerIdentity(CCSPlayerPawn pawn, out int playerId, out ulong sessionId)
+    {
+        playerId = 0;
+        sessionId = 0;
+
+        if (pawn == null || !pawn.IsValid)
+            return false;
+
+        var controller = pawn.Controller.Value?.As<CCSPlayerController>();
+        if (controller == null || !controller.IsValid)
+            return false;
+
+        var player = _core.PlayerManager.GetPlayer((int)(controller.Index - 1));
+        if (player == null || !player.IsValid)
+            return false;
+
+        playerId = player.PlayerID;
+        sessionId = player.SessionId;
+        return true;
+    }
+
+    public void SetPlayerModelFixed(CCSPlayerPawn pawn, string modelPath)
+    {
+        if (pawn == null || !pawn.IsValid)
+            return;
+
+        if (pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+            return;
+
+        if (string.IsNullOrWhiteSpace(modelPath))
+            return;
+
+        if (!TryGetPlayerIdentity(pawn, out var playerId, out var sessionId))
+            return;
+
+        pawn.SetModel(modelPath);
+        FixPlayerModelAnimations(playerId, sessionId, GetCurrentRoundGeneration(), pawn.AbsVelocity);
+    }
+
+    private void FixPlayerModelAnimations(int playerId, ulong sessionId, int expectedRoundGeneration, Vector originalVelocity)
+    {
+        if (!TryResolveCurrentPlayerPawn(playerId, sessionId, expectedRoundGeneration, out _, out var currentPawn, requireAlive: true))
+            return;
+
+        currentPawn.Teleport(null, null, new Vector(0, 0, 0));
+        currentPawn.MoveType = MoveType_t.MOVETYPE_OBSOLETE;
+        currentPawn.ActualMoveType = MoveType_t.MOVETYPE_OBSOLETE;
+        currentPawn.MoveTypeUpdated();
+
+        _core.Scheduler.DelayBySeconds(0.02f, () =>
+        {
+            if (!TryResolveCurrentPlayerPawn(playerId, sessionId, expectedRoundGeneration, out _, out var resolvedPawn, requireAlive: true))
+                return;
+
+            resolvedPawn.MoveType = MoveType_t.MOVETYPE_WALK;
+            resolvedPawn.ActualMoveType = MoveType_t.MOVETYPE_WALK;
+            resolvedPawn.MoveTypeUpdated();
+
+            resolvedPawn.Teleport(null, null, originalVelocity);
+        });
     }
 
 
@@ -219,6 +340,334 @@ public class HanZriotHelpers
                 sound.Emit();
             });
         }
+    }
+
+    public void GiveGrenade(IPlayer player, string weaponName)
+    {
+        if (player is not { IsValid: true })
+            return;
+
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+            return;
+
+        var itemServices = pawn.ItemServices;
+        if (itemServices == null || !itemServices.IsValid)
+            return;
+
+        itemServices.GiveItem<CCSWeaponBase>(weaponName);
+    }
+
+    public IEnumerable<IPlayer> GetPlayersInRadius(Vector center, float radius, byte teamNum)
+    {
+        float radiusSquared = radius * radius;
+
+        foreach (var player in _core.PlayerManager.GetAllPlayers())
+        {
+            if (player is not { IsValid: true })
+                continue;
+
+            var controller = player.Controller;
+            if (controller == null || !controller.IsValid || controller.TeamNum != teamNum || !controller.PawnIsAlive)
+                continue;
+
+            var pawn = player.PlayerPawn;
+            if (pawn == null || !pawn.IsValid)
+                continue;
+
+            var origin = pawn.AbsOrigin;
+            if (origin == null)
+                continue;
+
+            if (GetDistanceSquared(center, origin.Value) <= radiusSquared)
+            {
+                yield return player;
+            }
+        }
+    }
+
+    public void ApplyDamage(IPlayer attacker, IPlayer target, float damageAmount, DamageTypes_t damageType = DamageTypes_t.DMG_BULLET)
+    {
+        if (damageAmount <= 0f)
+            return;
+
+        if (attacker is not { IsValid: true } || target is not { IsValid: true })
+            return;
+
+        var attackerPawn = attacker.PlayerPawn;
+        var targetPawn = target.PlayerPawn;
+        if (attackerPawn == null || !attackerPawn.IsValid || targetPawn == null || !targetPawn.IsValid)
+            return;
+
+        CBaseEntity inflictorEntity = attackerPawn;
+        CBaseEntity attackerEntity = attackerPawn;
+        CBaseEntity abilityEntity = attackerPawn;
+
+        var damageInfo = new CTakeDamageInfo(inflictorEntity, attackerEntity, abilityEntity, damageAmount, damageType)
+        {
+            DamageForce = new Vector(0, 0, 10f)
+        };
+
+        var targetPos = targetPawn.AbsOrigin;
+        if (targetPos != null)
+        {
+            damageInfo.DamagePosition = targetPos.Value;
+        }
+
+        target.TakeDamage(damageInfo);
+    }
+
+    public CParticleSystem? CreateParticleAtPos(CCSPlayerPawn pawn, Vector pos, string effectName)
+    {
+        if (pawn == null || !pawn.IsValid || string.IsNullOrWhiteSpace(effectName))
+            return null;
+
+        var particle = _core.EntitySystem.CreateEntityByDesignerName<CParticleSystem>("info_particle_system");
+        if (particle == null || !particle.IsValid || !particle.IsValidEntity)
+            return null;
+
+        particle.StartActive = true;
+        particle.EffectName = effectName;
+        particle.AcceptInput("Start", "");
+        particle.DispatchSpawn();
+        particle.Teleport(pos, QAngle.Zero, Vector.Zero);
+        particle.AcceptInput("SetParent", "!activator", pawn, particle);
+        return particle;
+    }
+
+    public void ApplySpecialGrenadeBurn(IPlayer attacker, IPlayer zombie, float burnDamage, float duration, string particlePath, string soundPath)
+    {
+        if (attacker is not { IsValid: true } || zombie is not { IsValid: true })
+            return;
+
+        int playerId = zombie.PlayerID;
+        ClearPlayerGrenadeBurn(playerId);
+
+        if (duration <= 0f)
+            return;
+
+        var pawn = zombie.PlayerPawn;
+        if (pawn == null || !pawn.IsValid)
+            return;
+
+        CParticleSystem? particle = null;
+        var origin = pawn.AbsOrigin;
+        if (origin != null && !string.IsNullOrWhiteSpace(particlePath))
+        {
+            Vector offsetPos = new(origin.Value.X, origin.Value.Y, origin.Value.Z + 15f);
+            particle = CreateParticleAtPos(pawn, offsetPos, particlePath);
+        }
+
+        float startTime = _core.Engine.GlobalVars.CurrentTime;
+        float lastSoundTime = startTime - 1.0f;
+        CancellationTokenSource? timer = null;
+        timer = _core.Scheduler.RepeatBySeconds(0.2f, () =>
+        {
+            if (zombie is not { IsValid: true })
+            {
+                ClearPlayerGrenadeBurn(playerId);
+                return;
+            }
+
+            var currentPawn = zombie.PlayerPawn;
+            if (currentPawn == null || !currentPawn.IsValid)
+            {
+                ClearPlayerGrenadeBurn(playerId);
+                return;
+            }
+
+            if (_core.Engine.GlobalVars.CurrentTime - startTime >= duration)
+            {
+                ClearPlayerGrenadeBurn(playerId);
+                return;
+            }
+
+            if (burnDamage > 0f)
+            {
+                ApplyDamage(attacker, zombie, burnDamage, DamageTypes_t.DMG_BURN);
+            }
+
+            if (!string.IsNullOrWhiteSpace(soundPath) && _core.Engine.GlobalVars.CurrentTime - lastSoundTime >= 1.0f)
+            {
+                var sound = RandomSelectSound(soundPath);
+                if (!string.IsNullOrWhiteSpace(sound))
+                {
+                    EmitSoundToEntity(zombie, sound);
+                }
+
+                lastSoundTime = _core.Engine.GlobalVars.CurrentTime;
+            }
+        });
+
+        _core.Scheduler.StopOnMapChange(timer);
+        _globals.ActiveGrenadeBurns[playerId] = (particle, timer);
+    }
+
+    public void ClearPlayerGrenadeBurn(int playerId)
+    {
+        if (!_globals.ActiveGrenadeBurns.TryGetValue(playerId, out var burn))
+            return;
+
+        if (burn.Particle != null && burn.Particle.IsValid && burn.Particle.IsValidEntity)
+        {
+            burn.Particle.AcceptInput("kill", 0);
+        }
+
+        burn.Timer?.Cancel();
+        _globals.ActiveGrenadeBurns.Remove(playerId);
+    }
+
+    public void ClearAllGrenadeBurns()
+    {
+        foreach (var playerId in _globals.ActiveGrenadeBurns.Keys.ToList())
+        {
+            ClearPlayerGrenadeBurn(playerId);
+        }
+    }
+
+    public COmniLight? CreateGrenadeLight(Vector position, float range, float brightness, string soundPath)
+    {
+        var light = _core.EntitySystem.CreateEntity<COmniLight>();
+        if (light == null || !light.IsValid)
+            return null;
+
+        light.Enabled = true;
+        light.DirectLight = 3;
+        light.OuterAngle = 360f;
+        light.ColorMode = 0;
+        light.Shape = 0;
+        light.LightStyleString = "None";
+        light.Color = new SwiftlyS2.Shared.Natives.Color(255, 255, 255, 255);
+        light.Brightness = brightness > 0f ? brightness : 5f;
+        light.Range = range;
+        light.Teleport(position, null, null);
+        light.DispatchSpawn();
+
+        var sound = RandomSelectSound(soundPath);
+        if (!string.IsNullOrWhiteSpace(sound))
+        {
+            var lightSound = new SwiftlyS2.Shared.Sounds.SoundEvent(sound, 1.0f, 1.0f);
+            lightSound.SourceEntityIndex = (int)light.Index;
+            lightSound.Recipients.AddAllPlayers();
+            _core.Scheduler.NextTick(() => lightSound.Emit());
+        }
+
+        return light;
+    }
+
+    public void RemoveGrenadeLight(uint lightIndex)
+    {
+        if (_globals.ActiveGrenadeLightTimers.TryGetValue(lightIndex, out var timer))
+        {
+            timer.Cancel();
+            _globals.ActiveGrenadeLightTimers.Remove(lightIndex);
+        }
+
+        if (_globals.ActiveGrenadeLights.TryGetValue(lightIndex, out var light))
+        {
+            if (light.IsValid && light.IsValidEntity)
+            {
+                light.AcceptInput("kill", 0);
+            }
+
+            _globals.ActiveGrenadeLights.Remove(lightIndex);
+        }
+    }
+
+    public void ClearAllGrenadeLights()
+    {
+        foreach (var lightIndex in _globals.ActiveGrenadeLightTimers.Keys.ToList())
+        {
+            RemoveGrenadeLight(lightIndex);
+        }
+
+        foreach (var lightIndex in _globals.ActiveGrenadeLights.Keys.ToList())
+        {
+            RemoveGrenadeLight(lightIndex);
+        }
+    }
+
+    public void ApplyFreezeGrenade(IPlayer player, float duration)
+    {
+        if (player is not { IsValid: true } || duration <= 0f)
+            return;
+
+        var controller = player.Controller;
+        if (controller == null || !controller.IsValid || !controller.PawnIsAlive)
+            return;
+
+        int playerId = player.PlayerID;
+        ulong sessionId = player.SessionId;
+        int roundGeneration = GetCurrentRoundGeneration();
+
+        ClearFreezeGrenade(playerId, unfreeze: false);
+        SetFreezeState(player, true);
+
+        var timer = _core.Scheduler.DelayBySeconds(duration, () =>
+        {
+            _globals.ActiveFreezeGrenades.Remove(playerId);
+
+            if (!TryResolveCurrentPlayer(playerId, sessionId, roundGeneration, out var currentPlayer, requireAlive: true))
+                return;
+
+            var currentController = currentPlayer.Controller;
+            if (currentController == null || !currentController.IsValid)
+                return;
+
+            if (!_globals.GameStart && currentController.TeamNum == (byte)Team.T)
+                return;
+
+            SetFreezeState(currentPlayer, false);
+        });
+
+        _core.Scheduler.StopOnMapChange(timer);
+        _globals.ActiveFreezeGrenades[playerId] = timer;
+    }
+
+    public void ClearFreezeGrenade(int playerId, bool unfreeze = true)
+    {
+        if (_globals.ActiveFreezeGrenades.TryGetValue(playerId, out var timer))
+        {
+            timer?.Cancel();
+            _globals.ActiveFreezeGrenades.Remove(playerId);
+        }
+
+        if (!unfreeze)
+            return;
+
+        var player = _core.PlayerManager.GetPlayer(playerId);
+        if (player is { IsValid: true })
+        {
+            SetFreezeState(player, false);
+        }
+    }
+
+    public void ClearPlayerGrenadeEffects(int playerId)
+    {
+        ClearPlayerGrenadeBurn(playerId);
+        ClearFreezeGrenade(playerId);
+    }
+
+    public void ClearAllGrenadeEffects()
+    {
+        ClearAllGrenadeBurns();
+
+        foreach (var playerId in _globals.ActiveFreezeGrenades.Keys.ToList())
+        {
+            ClearFreezeGrenade(playerId);
+        }
+
+        ClearAllGrenadeLights();
+        _globals.SpecialHegrenadeEntityIds.Clear();
+        _globals.SpecialFlashbangEntityIds.Clear();
+    }
+
+    private static float GetDistanceSquared(Vector left, Vector right)
+    {
+        float x = left.X - right.X;
+        float y = left.Y - right.Y;
+        float z = left.Z - right.Z;
+        return x * x + y * y + z * z;
     }
 
     public void RemoveRoundObjective()

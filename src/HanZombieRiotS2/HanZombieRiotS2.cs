@@ -24,6 +24,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
     private HanZriotCFG _ZriotCFG = null!;
     private IStageConfigProvider _ZriotDayCFG = null!;
     private IZombieConfigProvider _ZriotZombieCFG = null!;
+    private IGrenadeConfigProvider _ZriotGrenadeCFG = null!;
 
     private HanZriotEvents _Events = null!;
     private HanZriotHelpers _Helpers = null!;
@@ -38,6 +39,8 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
             builder.AddJsonFile("HanZriotCFG.jsonc", false, true);
         });
 
+        HanZriotConfigBootstrapper.EnsureDefaultConfigFiles(Core);
+
 
         var collection = new ServiceCollection();
         collection.AddSwiftly(Core);
@@ -49,6 +52,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 
         collection.AddSingleton<IStageConfigProvider, StageConfigProvider>();
         collection.AddSingleton<IZombieConfigProvider, ZombieConfigProvider>();
+        collection.AddSingleton<IGrenadeConfigProvider, GrenadeConfigProvider>();
 
         collection.AddSingleton<HanZriotGlobals>();
         collection.AddSingleton<HanZriotEvents>();
@@ -61,6 +65,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 
         _ZriotDayCFG = ServiceProvider.GetRequiredService<IStageConfigProvider>();
         _ZriotZombieCFG = ServiceProvider.GetRequiredService<IZombieConfigProvider>();
+        _ZriotGrenadeCFG = ServiceProvider.GetRequiredService<IGrenadeConfigProvider>();
 
         _Globals = ServiceProvider.GetRequiredService<HanZriotGlobals>();
         _Events = ServiceProvider.GetRequiredService<HanZriotEvents>();
@@ -108,6 +113,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 
         _ZriotDayCFG.Reload(difficulty, mapname);
         _ZriotZombieCFG.Reload(difficulty, mapname);
+        _ZriotGrenadeCFG.Reload(difficulty, mapname);
 
         if (_Globals.CurrentMapIsHighDiff)
         {

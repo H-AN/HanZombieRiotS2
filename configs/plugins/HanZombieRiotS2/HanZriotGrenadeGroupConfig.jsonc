@@ -1,0 +1,38 @@
+{
+  "ZriotGrenadeCFG": {
+    "FireGrenade": {
+      "ExplosionDamage": 300,
+      "ExplosionRadius": 500,
+      "BurnDamage": 5,
+      "BurnDuration": 10,
+      "BurnParticle": "particles/burning_fx/env_fire_large.vpcf",
+      "Enabled": true,
+      "GiveOnSpawn": false,
+      "AllowBots": false,
+      "RoundLimit": 0,
+      "LifeLimit": 0,
+      "Sound": ""
+    },
+    "LightGrenade": {
+      "Duration": 10,
+      "LightRadius": 800,
+      "Brightness": 5,
+      "Enabled": true,
+      "GiveOnSpawn": false,
+      "AllowBots": false,
+      "RoundLimit": 0,
+      "LifeLimit": 0,
+      "Sound": ""
+    },
+    "FreezeGrenade": {
+      "FreezeRadius": 350,
+      "FreezeDuration": 5,
+      "Enabled": true,
+      "GiveOnSpawn": false,
+      "AllowBots": false,
+      "RoundLimit": 0,
+      "LifeLimit": 0,
+      "Sound": ""
+    }
+  }
+}

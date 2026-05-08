@@ -38,6 +38,11 @@ public class HanZriotAPI : IHanZriotAPI, IDisposable
     public int CurrentDayBeforeZombie => _services.GetCurrentDayBeforeZombieCount();
     public bool CurrentMapIsHighDifficulty => _services.CurrentMapIsHighDifficulty();
     public bool NextMapWillBeHighDifficulty => _services.NextMapWillBeHighDifficulty();
+    public string? ZRiot_GetZombieName(IPlayer player)
+    {
+        ThrowIfDisposed();
+        return _services.GetCurrentZombieName(player);
+    }
 
     public void ZRiot_Human(IPlayer player)
     {

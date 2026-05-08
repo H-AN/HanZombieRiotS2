@@ -16,6 +16,12 @@ public interface IZombieConfigProvider
     void Reload(string difficulty, string mapName);
 }
 
+public interface IGrenadeConfigProvider
+{
+    HanZriotGrenadeGroupConfig GetConfig();
+    void Reload(string difficulty, string mapName);
+}
+
 public class StageConfigProvider : IStageConfigProvider
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -139,5 +145,66 @@ public class ZombieConfigProvider : IZombieConfigProvider
     private sealed class HanZriotZombieConfigWrapper
     {
         public ZombieDataConfig ZriotZombieCFG { get; set; } = new();
+    }
+}
+
+public class GrenadeConfigProvider : IGrenadeConfigProvider
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        AllowTrailingCommas = true,
+        ReadCommentHandling = JsonCommentHandling.Skip
+    };
+
+    private readonly ISwiftlyCore _core;
+    private HanZriotGrenadeGroupConfig _current = new();
+
+    public GrenadeConfigProvider(ISwiftlyCore core)
+    {
+        _core = core;
+    }
+
+    public HanZriotGrenadeGroupConfig GetConfig() => _current;
+
+    public void Reload(string difficulty, string mapName)
+    {
+        const string fileName = "HanZriotGrenadeGroupConfig.jsonc";
+
+        string? fullPath = ResolveConfigPath(fileName, mapName);
+        if (fullPath == null)
+        {
+            _core.Logger.LogWarning($"[Provider] Grenade config file not found: {fileName}");
+            _current = new HanZriotGrenadeGroupConfig();
+            return;
+        }
+
+        try
+        {
+            string json = File.ReadAllText(fullPath);
+            var wrapper = JsonSerializer.Deserialize<HanZriotGrenadeConfigWrapper>(json, JsonOptions);
+            _current = wrapper?.ZriotGrenadeCFG ?? new HanZriotGrenadeGroupConfig();
+            _core.Logger.LogInformation($"[Provider] Grenade config loaded: {fullPath}");
+        }
+        catch (Exception ex)
+        {
+            _core.Logger.LogError($"[Provider] Failed to deserialize grenade config {fullPath}: {ex}");
+            _current = new HanZriotGrenadeGroupConfig();
+        }
+    }
+
+    private string? ResolveConfigPath(string fileName, string mapName)
+    {
+        string baseConfig = _core.Configuration.GetConfigPath("");
+        string mapPath = Path.Combine(baseConfig, mapName, fileName);
+        if (File.Exists(mapPath))
+            return mapPath;
+
+        string defaultPath = Path.Combine(baseConfig, fileName);
+        return File.Exists(defaultPath) ? defaultPath : null;
+    }
+
+    private sealed class HanZriotGrenadeConfigWrapper
+    {
+        public HanZriotGrenadeGroupConfig ZriotGrenadeCFG { get; set; } = new();
     }
 }

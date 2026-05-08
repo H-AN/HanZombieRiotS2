@@ -1,4 +1,5 @@
 using SwiftlyS2.Shared.Players;
+using SwiftlyS2.Shared.SchemaDefinitions;
 
 namespace HanZombieRiotS2;
 
@@ -45,6 +46,22 @@ public class HanZriotGlobals
     public CancellationTokenSource? g_DeathCountDown { get; set; } = null;
 
     public Dictionary<int, ZombieRegenState> g_ZombieRegenStates = new();
+    public Dictionary<int, string> CurrentZombieNames { get; } = new();
+    public Dictionary<int, Queue<bool>> PendingFireGrenades { get; } = new();
+    public Dictionary<int, Queue<bool>> PendingLightGrenades { get; } = new();
+    public Dictionary<int, Queue<bool>> PendingFreezeGrenades { get; } = new();
+    public int[] FireGrenadeRoundUses { get; } = new int[65];
+    public int[] FireGrenadeLifeUses { get; } = new int[65];
+    public int[] LightGrenadeRoundUses { get; } = new int[65];
+    public int[] LightGrenadeLifeUses { get; } = new int[65];
+    public int[] FreezeGrenadeRoundUses { get; } = new int[65];
+    public int[] FreezeGrenadeLifeUses { get; } = new int[65];
+    public Dictionary<int, (CParticleSystem? Particle, CancellationTokenSource? Timer)> ActiveGrenadeBurns { get; } = new();
+    public Dictionary<int, CancellationTokenSource?> ActiveFreezeGrenades { get; } = new();
+    public Dictionary<uint, COmniLight> ActiveGrenadeLights { get; } = new();
+    public Dictionary<uint, CancellationTokenSource> ActiveGrenadeLightTimers { get; } = new();
+    public HashSet<int> SpecialHegrenadeEntityIds { get; } = new();
+    public HashSet<short> SpecialFlashbangEntityIds { get; } = new();
 
     public CancellationTokenSource? g_ZombieRegenTimer = null;
 

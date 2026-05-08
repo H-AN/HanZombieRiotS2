@@ -51,6 +51,12 @@ public interface IHanZriotAPI
     int MaxDay { get; }
 
     /// <summary>
+    /// Get the current zombie class name the player is actively using.
+    /// Returns null when the player is not currently an active zombie.
+    /// </summary>
+    string? ZRiot_GetZombieName(IPlayer player);
+
+    /// <summary>
     /// change player to human.
     /// 指定某个玩家成为人类.
     /// </summary>

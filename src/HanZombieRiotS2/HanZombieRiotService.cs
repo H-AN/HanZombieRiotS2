@@ -277,6 +277,105 @@ public class HanZriotService
         return remaining < 0 ? 0 : remaining;
     }
 
+    public string? GetCurrentZombieName(IPlayer player)
+    {
+        if (player is not { IsValid: true })
+            return null;
+
+        var controller = player.Controller;
+        if (controller is not { IsValid: true })
+            return null;
+
+        if (controller.TeamNum != (byte)Team.T || !controller.PawnIsAlive)
+            return null;
+
+        return GetCurrentZombieName(player.PlayerID);
+    }
+
+    public string? GetCurrentZombieName(int playerId)
+    {
+        if (playerId < 0)
+            return null;
+
+        return _globals.CurrentZombieNames.TryGetValue(playerId, out var zombieName)
+            && !string.IsNullOrWhiteSpace(zombieName)
+            ? zombieName
+            : null;
+    }
+
+    public void SetCurrentZombieName(int playerId, string? zombieName)
+    {
+        if (playerId < 0)
+            return;
+
+        if (string.IsNullOrWhiteSpace(zombieName))
+        {
+            _globals.CurrentZombieNames.Remove(playerId);
+            return;
+        }
+
+        _globals.CurrentZombieNames[playerId] = zombieName;
+    }
+
+    public void ResetSpecialGrenadeLifeUsage(int playerId)
+    {
+        if (playerId < 0 || playerId >= _globals.RebornSec.Length)
+            return;
+
+        _globals.FireGrenadeLifeUses[playerId] = 0;
+        _globals.LightGrenadeLifeUses[playerId] = 0;
+        _globals.FreezeGrenadeLifeUses[playerId] = 0;
+    }
+
+    public bool QueueSpecialGrenadeThrow(HanZriotSpecialGrenadeType type, IPlayer player, bool enabled, bool allowBots, int roundLimit, int lifeLimit)
+    {
+        if (player is not { IsValid: true })
+            return false;
+
+        bool applySpecial = false;
+        int playerId = player.PlayerID;
+
+        var controller = player.Controller;
+        if (enabled
+            && controller is { IsValid: true, TeamNum: (byte)Team.CT, PawnIsAlive: true }
+            && (!player.IsFakeClient || allowBots)
+            && IsWithinSpecialGrenadeLimit(GetRoundGrenadeUses(type), playerId, roundLimit)
+            && IsWithinSpecialGrenadeLimit(GetLifeGrenadeUses(type), playerId, lifeLimit))
+        {
+            applySpecial = true;
+            GetRoundGrenadeUses(type)[playerId]++;
+            GetLifeGrenadeUses(type)[playerId]++;
+        }
+
+        var queueMap = GetPendingGrenadeStates(type);
+        if (!queueMap.TryGetValue(playerId, out var queue))
+        {
+            queue = new Queue<bool>();
+            queueMap[playerId] = queue;
+        }
+
+        queue.Enqueue(applySpecial);
+        return applySpecial;
+    }
+
+    public bool ConsumeQueuedSpecialGrenade(HanZriotSpecialGrenadeType type, int playerId)
+    {
+        if (playerId < 0)
+            return false;
+
+        var queueMap = GetPendingGrenadeStates(type);
+        if (!queueMap.TryGetValue(playerId, out var queue) || queue.Count == 0)
+            return false;
+
+        bool applySpecial = queue.Dequeue();
+        if (queue.Count == 0)
+        {
+            queueMap.Remove(playerId);
+        }
+
+        return applySpecial;
+    }
+
     public void ResetPlayerRuntimeState(int playerId, bool resetHudState)
     {
         if (playerId < 0 || playerId >= _globals.RebornSec.Length)
@@ -289,6 +388,9 @@ public class HanZriotService
         ClearPendingHumanRespawn(playerId);
         _globals.InProtect[playerId] = false;
         _globals.g_ZombieRegenStates.Remove(playerId);
+        SetCurrentZombieName(playerId, null);
+        ResetPlayerSpecialGrenadeState(playerId);
+        _helpers.ClearPlayerGrenadeEffects(playerId);
 
         if (resetHudState)
         {
@@ -317,6 +419,15 @@ public class HanZriotService
         }
 
         _globals.g_ZombieRegenStates.Clear();
+        _globals.CurrentZombieNames.Clear();
+        ClearAllSpecialGrenadeQueues();
+        Array.Clear(_globals.FireGrenadeRoundUses);
+        Array.Clear(_globals.FireGrenadeLifeUses);
+        Array.Clear(_globals.LightGrenadeRoundUses);
+        Array.Clear(_globals.LightGrenadeLifeUses);
+        Array.Clear(_globals.FreezeGrenadeRoundUses);
+        Array.Clear(_globals.FreezeGrenadeLifeUses);
+        _helpers.ClearAllGrenadeEffects();
 
         if (clearPlayerRoundState)
         {
@@ -511,6 +622,68 @@ public class HanZriotService
         {
             controllerEntity.Name = randomZombie.Name;
         }
+
+        SetCurrentZombieName(client.PlayerID, randomZombie.Name);
+    }
+
+    private void ResetPlayerSpecialGrenadeState(int playerId)
+    {
+        _globals.FireGrenadeRoundUses[playerId] = 0;
+        _globals.FireGrenadeLifeUses[playerId] = 0;
+        _globals.LightGrenadeRoundUses[playerId] = 0;
+        _globals.LightGrenadeLifeUses[playerId] = 0;
+        _globals.FreezeGrenadeRoundUses[playerId] = 0;
+        _globals.FreezeGrenadeLifeUses[playerId] = 0;
+        _globals.PendingFireGrenades.Remove(playerId);
+        _globals.PendingLightGrenades.Remove(playerId);
+        _globals.PendingFreezeGrenades.Remove(playerId);
+    }
+
+    private void ClearAllSpecialGrenadeQueues()
+    {
+        _globals.PendingFireGrenades.Clear();
+        _globals.PendingLightGrenades.Clear();
+        _globals.PendingFreezeGrenades.Clear();
+    }
+
+    private static bool IsWithinSpecialGrenadeLimit(int[] counters, int playerId, int limit)
+    {
+        return playerId >= 0
+            && playerId < counters.Length
+            && (limit <= 0 || counters[playerId] < limit);
+    }
+
+    private int[] GetRoundGrenadeUses(HanZriotSpecialGrenadeType type)
+    {
+        return type switch
+        {
+            HanZriotSpecialGrenadeType.Fire => _globals.FireGrenadeRoundUses,
+            HanZriotSpecialGrenadeType.Light => _globals.LightGrenadeRoundUses,
+            HanZriotSpecialGrenadeType.Freeze => _globals.FreezeGrenadeRoundUses,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
+
+    private int[] GetLifeGrenadeUses(HanZriotSpecialGrenadeType type)
+    {
+        return type switch
+        {
+            HanZriotSpecialGrenadeType.Fire => _globals.FireGrenadeLifeUses,
+            HanZriotSpecialGrenadeType.Light => _globals.LightGrenadeLifeUses,
+            HanZriotSpecialGrenadeType.Freeze => _globals.FreezeGrenadeLifeUses,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
+
+    private Dictionary<int, Queue<bool>> GetPendingGrenadeStates(HanZriotSpecialGrenadeType type)
+    {
+        return type switch
+        {
+            HanZriotSpecialGrenadeType.Fire => _globals.PendingFireGrenades,
+            HanZriotSpecialGrenadeType.Light => _globals.PendingLightGrenades,
+            HanZriotSpecialGrenadeType.Freeze => _globals.PendingFreezeGrenades,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
     }
 
     public void ChangeKnife(IPlayer player)

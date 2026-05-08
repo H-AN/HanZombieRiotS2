@@ -7,7 +7,10 @@
         "HealthBoost": 0,
         "BeforeZombie": 0,
         "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "Zombienormal1,Zombienormal2"
+        "ZombieOverride": "Zombienormal1,Zombienormal2",
+        "InfiniteReserveAmmo": false,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": false
       },
       {
         "DayName": "第2天-高难度de_overpass",
@@ -15,7 +18,10 @@
         "HealthBoost": 0,
         "BeforeZombie": 0,
         "Storyline": "故事线1",
-        "ZombieOverride": "Zombienormal1,Zombienormal2"
+        "ZombieOverride": "Zombienormal1,Zombienormal2",
+        "InfiniteReserveAmmo": false,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": false
       },
       {
         "DayName": "第3天-高难度de_overpass",
@@ -23,7 +29,10 @@
         "HealthBoost": 0,
         "BeforeZombie": 0,
         "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "ZombieLight,ZombieHeavy"
+        "ZombieOverride": "ZombieLight,ZombieHeavy",
+        "InfiniteReserveAmmo": false,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": false
       },
       {
         "DayName": "第4天-高难度de_overpass",
@@ -31,7 +40,10 @@
         "HealthBoost": 0,
         "BeforeZombie": 0,
         "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "Zombiemother,Zombiepolice"
+        "ZombieOverride": "Zombiemother,Zombiepolice",
+        "InfiniteReserveAmmo": false,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": false
       },
       {
         "DayName": "第5天-高难度de_overpass",
@@ -39,7 +51,10 @@
         "HealthBoost": 0,
         "BeforeZombie": 0,
         "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "Zombiesherif,zombiebomb"
+        "ZombieOverride": "Zombiesherif,zombiebomb",
+        "InfiniteReserveAmmo": false,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": false
       },
       {
         "DayName": "第6天-高难度de_overpass",
@@ -47,7 +62,10 @@
         "HealthBoost": 0,
         "BeforeZombie": 0,
         "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "zombief,zombierange"
+        "ZombieOverride": "zombief,zombierange",
+        "InfiniteReserveAmmo": false,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": false
       },
       {
         "DayName": "第7天-高难度de_overpass",
@@ -55,7 +73,10 @@
         "HealthBoost": 10000,
         "BeforeZombie": 0,
         "Storyline": "故事线1",
-        "ZombieOverride": ""
+        "ZombieOverride": "",
+        "InfiniteReserveAmmo": false,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": false
       },
 	  {
         "DayName": "第8天-高难度de_overpass",
@@ -63,7 +84,10 @@
         "HealthBoost": 10000,
         "BeforeZombie": 0,
         "Storyline": "故事线1de_overpass",
-        "ZombieOverride": ""
+        "ZombieOverride": "",
+        "InfiniteReserveAmmo": false,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": false
       }
 	  
     ]
