@@ -327,53 +327,25 @@ public class HanZriotService
         _globals.FreezeGrenadeLifeUses[playerId] = 0;
     }
 
-    public bool QueueSpecialGrenadeThrow(HanZriotSpecialGrenadeType type, IPlayer player, bool enabled, bool allowBots, int roundLimit, int lifeLimit)
+    public bool TryActivateSpecialGrenade(HanZriotSpecialGrenadeType type, IPlayer player, bool enabled, bool allowBots, int roundLimit, int lifeLimit)
     {
         if (player is not { IsValid: true })
             return false;
 
-        bool applySpecial = false;
         int playerId = player.PlayerID;
-
         var controller = player.Controller;
-        if (enabled
+        if (!(enabled
             && controller is { IsValid: true, TeamNum: (byte)Team.CT, PawnIsAlive: true }
             && (!player.IsFakeClient || allowBots)
             && IsWithinSpecialGrenadeLimit(GetRoundGrenadeUses(type), playerId, roundLimit)
-            && IsWithinSpecialGrenadeLimit(GetLifeGrenadeUses(type), playerId, lifeLimit))
+            && IsWithinSpecialGrenadeLimit(GetLifeGrenadeUses(type), playerId, lifeLimit)))
         {
-            applySpecial = true;
-            GetRoundGrenadeUses(type)[playerId]++;
-            GetLifeGrenadeUses(type)[playerId]++;
-        }
-
-        var queueMap = GetPendingGrenadeStates(type);
-        if (!queueMap.TryGetValue(playerId, out var queue))
-        {
-            queue = new Queue<bool>();
-            queueMap[playerId] = queue;
-        }
-
-        queue.Enqueue(applySpecial);
-        return applySpecial;
-    }
-
-    public bool ConsumeQueuedSpecialGrenade(HanZriotSpecialGrenadeType type, int playerId)
-    {
-        if (playerId < 0)
             return false;
-
-        var queueMap = GetPendingGrenadeStates(type);
-        if (!queueMap.TryGetValue(playerId, out var queue) || queue.Count == 0)
-            return false;
-
-        bool applySpecial = queue.Dequeue();
-        if (queue.Count == 0)
-        {
-            queueMap.Remove(playerId);
         }
 
-        return applySpecial;
+        GetRoundGrenadeUses(type)[playerId]++;
+        GetLifeGrenadeUses(type)[playerId]++;
+        return true;
     }
 
     public void ResetPlayerRuntimeState(int playerId, bool resetHudState)
@@ -420,7 +392,6 @@ public class HanZriotService
 
         _globals.g_ZombieRegenStates.Clear();
         _globals.CurrentZombieNames.Clear();
-        ClearAllSpecialGrenadeQueues();
         Array.Clear(_globals.FireGrenadeRoundUses);
         Array.Clear(_globals.FireGrenadeLifeUses);
         Array.Clear(_globals.LightGrenadeRoundUses);
@@ -634,16 +605,6 @@ public class HanZriotService
         _globals.LightGrenadeLifeUses[playerId] = 0;
         _globals.FreezeGrenadeRoundUses[playerId] = 0;
         _globals.FreezeGrenadeLifeUses[playerId] = 0;
-        _globals.PendingFireGrenades.Remove(playerId);
-        _globals.PendingLightGrenades.Remove(playerId);
-        _globals.PendingFreezeGrenades.Remove(playerId);
-    }
-
-    private void ClearAllSpecialGrenadeQueues()
-    {
-        _globals.PendingFireGrenades.Clear();
-        _globals.PendingLightGrenades.Clear();
-        _globals.PendingFreezeGrenades.Clear();
     }
 
     private static bool IsWithinSpecialGrenadeLimit(int[] counters, int playerId, int limit)
@@ -671,17 +632,6 @@ public class HanZriotService
             HanZriotSpecialGrenadeType.Fire => _globals.FireGrenadeLifeUses,
             HanZriotSpecialGrenadeType.Light => _globals.LightGrenadeLifeUses,
             HanZriotSpecialGrenadeType.Freeze => _globals.FreezeGrenadeLifeUses,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-        };
-    }
-
-    private Dictionary<int, Queue<bool>> GetPendingGrenadeStates(HanZriotSpecialGrenadeType type)
-    {
-        return type switch
-        {
-            HanZriotSpecialGrenadeType.Fire => _globals.PendingFireGrenades,
-            HanZriotSpecialGrenadeType.Light => _globals.PendingLightGrenades,
-            HanZriotSpecialGrenadeType.Freeze => _globals.PendingFreezeGrenades,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
@@ -853,7 +803,7 @@ public class HanZriotService
         else
         {
             _helpers.SetTeamScore(Team.CT);
-            _helpers.TerminateRound(RoundEndReason.CTsWin, 8.0f);
+            _helpers.TerminateRound(RoundEndReason.CTsWin, 5.0f);
         }
     }
 

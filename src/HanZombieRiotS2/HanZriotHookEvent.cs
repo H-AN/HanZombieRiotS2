@@ -51,7 +51,6 @@ public class HanZriotEvents
         _core.GameEvent.HookPre<EventPlayerSpawn>(OnPlayerSpawn);
         _core.GameEvent.HookPre<EventPlayerBlind>(OnPlayerBlind);
         _core.GameEvent.HookPre<EventWeaponFire>(OnWeaponFire);
-        _core.GameEvent.HookPre<EventGrenadeThrown>(OnGrenadeThrown);
         _core.GameEvent.HookPre<EventHegrenadeDetonate>(OnHegrenadeDetonate);
         _core.GameEvent.HookPre<EventFlashbangDetonate>(OnFlashbangDetonate);
         _core.GameEvent.HookPre<EventSmokegrenadeDetonate>(OnSmokegrenadeDetonate);
@@ -60,6 +59,7 @@ public class HanZriotEvents
         // Event 系列 Hook
         _core.Event.OnPrecacheResource += Event_OnPrecacheResource;
         _core.Event.OnMapUnload += Event_MapEnd;
+        _core.Event.OnEntityCreated += Event_OnEntityCreated;
         _core.Event.OnClientDisconnected += Event_OnClientDisconnected;
         _core.Event.OnEntityTakeDamage += Event_OnEntityTakeDamage;
         _core.Event.OnTick += Event_OnTick;
@@ -101,6 +101,24 @@ public class HanZriotEvents
     private void Event_MapEnd(IOnMapUnloadEvent @event)
     {
         _services.ResetMapRuntimeState();
+    }
+
+    private void Event_OnEntityCreated(IOnEntityCreatedEvent @event)
+    {
+        var entity = @event.Entity;
+        if (entity == null || !entity.IsValid || !entity.IsValidEntity)
+            return;
+
+        if (string.IsNullOrWhiteSpace(entity.DesignerName) || !entity.DesignerName.Contains("_projectile", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _core.Scheduler.NextTick(() =>
+        {
+            if (entity.IsValid && entity.IsValidEntity)
+            {
+                _helpers.CheckGrenadeSpawned(entity);
+            }
+        });
     }
 
     private HookResult OnRoundStart(EventRoundStart @event)
@@ -711,6 +729,9 @@ public class HanZriotEvents
         AddGrenadeResourceIfPresent(@event, grenadeConfig.FreezeGrenade.Sound);
         AddGrenadeResourceIfPresent(@event, grenadeConfig.FireGrenade.BurnParticle);
         AddGrenadeResourceIfPresent(@event, CFG.HumandefaultModel);
+        @event.AddItem("particles/ui/hud/ui_map_def_utility_trail.vpcf");
+        @event.AddItem("particles/burning_fx/barrel_burning_trail.vpcf");
+        @event.AddItem("particles/environment/de_train/train_coal_dump_trails.vpcf");
 
     }
 
@@ -725,58 +746,17 @@ public class HanZriotEvents
         }
     }
 
-    private HookResult OnGrenadeThrown(EventGrenadeThrown @event)
-    {
-        if (!TryGetSpecialGrenadeType(@event.Weapon, out var grenadeType))
-            return HookResult.Continue;
-
-        var thrower = @event.UserIdPlayer;
-        if (thrower == null || !thrower.IsValid)
-            return HookResult.Continue;
-
-        var grenadeConfig = _grenadeConfig.GetConfig();
-        bool enabled = false;
-        bool allowBots = false;
-        int roundLimit = 0;
-        int lifeLimit = 0;
-
-        switch (grenadeType)
-        {
-            case HanZriotSpecialGrenadeType.Fire:
-                enabled = _globals.GameStart && grenadeConfig.FireGrenade.Enabled;
-                allowBots = grenadeConfig.FireGrenade.AllowBots;
-                roundLimit = grenadeConfig.FireGrenade.RoundLimit;
-                lifeLimit = grenadeConfig.FireGrenade.LifeLimit;
-                break;
-            case HanZriotSpecialGrenadeType.Light:
-                enabled = _globals.GameStart && grenadeConfig.LightGrenade.Enabled;
-                allowBots = grenadeConfig.LightGrenade.AllowBots;
-                roundLimit = grenadeConfig.LightGrenade.RoundLimit;
-                lifeLimit = grenadeConfig.LightGrenade.LifeLimit;
-                break;
-            case HanZriotSpecialGrenadeType.Freeze:
-                enabled = _globals.GameStart && grenadeConfig.FreezeGrenade.Enabled;
-                allowBots = grenadeConfig.FreezeGrenade.AllowBots;
-                roundLimit = grenadeConfig.FreezeGrenade.RoundLimit;
-                lifeLimit = grenadeConfig.FreezeGrenade.LifeLimit;
-                break;
-        }
-
-        _services.QueueSpecialGrenadeThrow(grenadeType, thrower, enabled, allowBots, roundLimit, lifeLimit);
-        return HookResult.Continue;
-    }
-
     private HookResult OnHegrenadeDetonate(EventHegrenadeDetonate @event)
     {
-        var thrower = @event.UserIdPlayer;
-        if (thrower == null || !thrower.IsValid)
+        if (!_globals.GameStart)
             return HookResult.Continue;
 
-        if (!_services.ConsumeQueuedSpecialGrenade(HanZriotSpecialGrenadeType.Fire, thrower.PlayerID))
+        var thrower = @event.UserIdPlayer;
+        if (thrower == null || !thrower.IsValid)
             return HookResult.Continue;
 
         var config = _grenadeConfig.GetConfig().FireGrenade;
-        if (!config.Enabled)
+        if (!_services.TryActivateSpecialGrenade(HanZriotSpecialGrenadeType.Fire, thrower, config.Enabled, config.AllowBots, config.RoundLimit, config.LifeLimit))
             return HookResult.Continue;
 
         var sound = _helpers.RandomSelectSound(config.Sound);
@@ -786,6 +766,7 @@ public class HanZriotEvents
         }
 
         SwiftlyS2.Shared.Natives.Vector position = new(@event.X, @event.Y, @event.Z);
+        _helpers.DrawExpandingRing(position, config.ExplosionRadius, 255, 0, 0, 125);
         foreach (var zombie in _helpers.GetPlayersInRadius(position, config.ExplosionRadius, 2))
         {
             _helpers.ApplyDamage(thrower, zombie, config.ExplosionDamage, DamageTypes_t.DMG_BLAST);
@@ -797,16 +778,23 @@ public class HanZriotEvents
 
     private HookResult OnFlashbangDetonate(EventFlashbangDetonate @event)
     {
-        var thrower = @event.UserIdPlayer;
-        if (thrower == null || !thrower.IsValid)
-            return HookResult.Continue;
-
-        if (!_services.ConsumeQueuedSpecialGrenade(HanZriotSpecialGrenadeType.Light, thrower.PlayerID))
-            return HookResult.Continue;
-
         var config = _grenadeConfig.GetConfig().LightGrenade;
         if (!config.Enabled)
             return HookResult.Continue;
+
+        if (!_globals.GameStart)
+        {
+            SuppressFlashbangDetonate(@event.EntityID);
+            return HookResult.Continue;
+        }
+
+        var thrower = @event.UserIdPlayer;
+        if (thrower == null || !thrower.IsValid
+            || !_services.TryActivateSpecialGrenade(HanZriotSpecialGrenadeType.Light, thrower, true, config.AllowBots, config.RoundLimit, config.LifeLimit))
+        {
+            SuppressFlashbangDetonate(@event.EntityID);
+            return HookResult.Continue;
+        }
 
         TrackSpecialFlashbangEntity(@event.EntityID);
 
@@ -826,16 +814,23 @@ public class HanZriotEvents
 
     private HookResult OnSmokegrenadeDetonate(EventSmokegrenadeDetonate @event)
     {
-        var thrower = @event.UserIdPlayer;
-        if (thrower == null || !thrower.IsValid)
-            return HookResult.Continue;
-
-        if (!_services.ConsumeQueuedSpecialGrenade(HanZriotSpecialGrenadeType.Freeze, thrower.PlayerID))
-            return HookResult.Continue;
-
         var config = _grenadeConfig.GetConfig().FreezeGrenade;
         if (!config.Enabled)
             return HookResult.Continue;
+
+        if (!_globals.GameStart)
+        {
+            RemoveSmokeGrenadeEntity(@event.EntityID);
+            return HookResult.Continue;
+        }
+
+        var thrower = @event.UserIdPlayer;
+        if (thrower == null || !thrower.IsValid
+            || !_services.TryActivateSpecialGrenade(HanZriotSpecialGrenadeType.Freeze, thrower, true, config.AllowBots, config.RoundLimit, config.LifeLimit))
+        {
+            RemoveSmokeGrenadeEntity(@event.EntityID);
+            return HookResult.Continue;
+        }
 
         var sound = _helpers.RandomSelectSound(config.Sound);
         if (!string.IsNullOrWhiteSpace(sound))
@@ -844,16 +839,13 @@ public class HanZriotEvents
         }
 
         SwiftlyS2.Shared.Natives.Vector position = new(@event.X, @event.Y, @event.Z);
+        _helpers.DrawExpandingRing(position, config.FreezeRadius, 0, 0, 255, 125);
         foreach (var zombie in _helpers.GetPlayersInRadius(position, config.FreezeRadius, 2))
         {
             _helpers.ApplyFreezeGrenade(zombie, config.FreezeDuration);
         }
 
-        var entity = _core.EntitySystem.GetEntityByIndex<CSmokeGrenadeProjectile>((uint)@event.EntityID);
-        if (entity != null && entity.IsValid && entity.IsValidEntity)
-        {
-            entity.AcceptInput("kill", 0);
-        }
+        RemoveSmokeGrenadeEntity(@event.EntityID);
 
         return HookResult.Continue;
     }
@@ -998,30 +990,31 @@ public class HanZriotEvents
         }
     }
 
-    private static bool TryGetSpecialGrenadeType(string? weaponName, out HanZriotSpecialGrenadeType grenadeType)
-    {
-        switch (weaponName)
-        {
-            case "weapon_hegrenade":
-                grenadeType = HanZriotSpecialGrenadeType.Fire;
-                return true;
-            case "weapon_flashbang":
-                grenadeType = HanZriotSpecialGrenadeType.Light;
-                return true;
-            case "weapon_smokegrenade":
-                grenadeType = HanZriotSpecialGrenadeType.Freeze;
-                return true;
-            default:
-                grenadeType = default;
-                return false;
-        }
-    }
-
     private void TrackSpecialFlashbangEntity(short entityId)
     {
         _globals.SpecialFlashbangEntityIds.Add(entityId);
         var timer = _core.Scheduler.DelayBySeconds(1.0f, () => _globals.SpecialFlashbangEntityIds.Remove(entityId));
         _core.Scheduler.StopOnMapChange(timer);
+    }
+
+    private void SuppressFlashbangDetonate(short entityId)
+    {
+        TrackSpecialFlashbangEntity(entityId);
+
+        var entity = _core.EntitySystem.GetEntityByIndex<CFlashbangProjectile>((uint)entityId);
+        if (entity != null && entity.IsValid && entity.IsValidEntity)
+        {
+            entity.AcceptInput("kill", 0);
+        }
+    }
+
+    private void RemoveSmokeGrenadeEntity(short entityId)
+    {
+        var entity = _core.EntitySystem.GetEntityByIndex<CSmokeGrenadeProjectile>((uint)entityId);
+        if (entity != null && entity.IsValid && entity.IsValidEntity)
+        {
+            entity.AcceptInput("kill", 0);
+        }
     }
 
     private void Event_Protect(IOnEntityTakeDamageEvent @event)

@@ -587,6 +587,163 @@ public class HanZriotHelpers
         }
     }
 
+    public void DrawExpandingRing(Vector position, float maxRadius, int red, int green, int blue, int alpha, float duration = 0.4f, int segments = 16, float thickness = 18.0f)
+    {
+        CBeam?[] beams = new CBeam?[segments];
+        float startTime = _core.Engine.GlobalVars.CurrentTime;
+
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = MathF.PI * 2 * i / segments;
+            float nextAngle = MathF.PI * 2 * (i + 1) / segments;
+
+            Vector start = new(
+                position.X + MathF.Cos(angle),
+                position.Y + MathF.Sin(angle),
+                position.Z
+            );
+
+            Vector end = new(
+                position.X + MathF.Cos(nextAngle),
+                position.Y + MathF.Sin(nextAngle),
+                position.Z
+            );
+
+            beams[i] = CreateLaser(start, end, new Color(red, green, blue, alpha), thickness);
+        }
+
+        CancellationTokenSource? timer = null;
+        timer = _core.Scheduler.RepeatBySeconds(0.01f, () =>
+        {
+            float now = _core.Engine.GlobalVars.CurrentTime;
+            float progress = MathF.Min((now - startTime) / duration, 1.0f);
+            float currentRadius = maxRadius * progress;
+
+            for (int i = 0; i < segments; i++)
+            {
+                var beam = beams[i];
+                if (beam is not { IsValid: true, IsValidEntity: true })
+                    continue;
+
+                float angle = MathF.PI * 2 * i / segments;
+                float nextAngle = MathF.PI * 2 * (i + 1) / segments;
+
+                Vector start = new(
+                    position.X + currentRadius * MathF.Cos(angle),
+                    position.Y + currentRadius * MathF.Sin(angle),
+                    position.Z
+                );
+
+                Vector end = new(
+                    position.X + currentRadius * MathF.Cos(nextAngle),
+                    position.Y + currentRadius * MathF.Sin(nextAngle),
+                    position.Z
+                );
+
+                TeleportLaser(beam, start, end);
+            }
+
+            if (progress >= 1.0f)
+            {
+                for (int i = 0; i < segments; i++)
+                {
+                    var beam = beams[i];
+                    if (beam is not { IsValid: true, IsValidEntity: true })
+                        continue;
+
+                    beam.AcceptInput("Kill", 0);
+                    beams[i] = null;
+                }
+
+                timer?.Cancel();
+            }
+        });
+    }
+
+    public void CheckGrenadeSpawned(CEntityInstance entity)
+    {
+        if (entity == null || !entity.IsValid || !entity.IsValidEntity)
+            return;
+
+        var grenade = entity.As<CBaseCSGrenadeProjectile>();
+        if (grenade == null || !grenade.IsValid || !grenade.IsValidEntity)
+            return;
+
+        if (!grenade.Thrower.IsValid || grenade.Thrower.Value == null || !grenade.Thrower.Value.IsValidEntity)
+            return;
+
+        var pawn = grenade.Thrower.Value;
+        if (pawn == null || !pawn.IsValid)
+            return;
+
+        var player = _core.PlayerManager.GetPlayerFromPawn(pawn);
+        if (player == null || !player.IsValid)
+            return;
+
+        string trailPath = "particles/ui/hud/ui_map_def_utility_trail.vpcf";
+        string firePath = "particles/burning_fx/barrel_burning_trail.vpcf";
+        string blackPath = "particles/environment/de_train/train_coal_dump_trails.vpcf";
+
+        if (grenade.DesignerName.Equals("hegrenade_projectile", StringComparison.OrdinalIgnoreCase))
+        {
+            string heTrail = pawn.TeamNum == (byte)Team.T ? blackPath : firePath;
+            var heTrailEntity = CreateParticleGlow(grenade, heTrail);
+            if (heTrailEntity != null && heTrailEntity.IsValid && heTrailEntity.IsValidEntity)
+            {
+                heTrailEntity.AcceptInput("FollowEntity", "!activator", grenade, heTrailEntity);
+            }
+        }
+
+        var trail = CreateParticleGlow(grenade, trailPath);
+        if (trail != null && trail.IsValid && trail.IsValidEntity)
+        {
+            trail.AcceptInput("FollowEntity", "!activator", grenade, trail);
+        }
+    }
+
+    public CEnvParticleGlow? CreateParticleGlow(CBaseCSGrenadeProjectile grenade, string particles)
+    {
+        var entity = _core.EntitySystem.CreateEntity<CEnvParticleGlow>();
+        if (entity == null || !entity.IsValid || !entity.IsValidEntity)
+            return null;
+
+        entity.StartActive = true;
+        entity.EffectName = particles;
+        entity.RenderMode = RenderMode_t.kRenderNormal;
+        entity.DispatchSpawn();
+        entity.AcceptInput("Start", 0);
+        return entity;
+    }
+
+    private CBeam? CreateLaser(Vector start, Vector end, Color color, float width)
+    {
+        var beam = _core.EntitySystem.CreateEntityByDesignerName<CBeam>("beam");
+        if (beam == null || !beam.IsValid || !beam.IsValidEntity)
+            return null;
+
+        beam.Render = color;
+        beam.Width = width;
+        beam.HaloScale = 3.0f;
+        beam.Teleport(start, new QAngle(), new Vector(0, 0, 0));
+        beam.EndPos.X = end.X;
+        beam.EndPos.Y = end.Y;
+        beam.EndPos.Z = end.Z;
+        beam.DispatchSpawn();
+        return beam;
+    }
+
+    private static void TeleportLaser(CBeam beam, Vector start, Vector end)
+    {
+        if (beam == null || !beam.IsValid || !beam.IsValidEntity)
+            return;
+
+        beam.Teleport(start, new QAngle(), new Vector(0, 0, 0));
+        beam.EndPos.X = end.X;
+        beam.EndPos.Y = end.Y;
+        beam.EndPos.Z = end.Z;
+        beam.EndPosUpdated();
+    }
+
     public void ApplyFreezeGrenade(IPlayer player, float duration)
     {
         if (player is not { IsValid: true } || duration <= 0f)
@@ -658,7 +815,6 @@ public class HanZriotHelpers
         }
 
         ClearAllGrenadeLights();
-        _globals.SpecialHegrenadeEntityIds.Clear();
         _globals.SpecialFlashbangEntityIds.Clear();
     }
 
