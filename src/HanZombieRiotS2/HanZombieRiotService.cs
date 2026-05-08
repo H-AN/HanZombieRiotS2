@@ -836,14 +836,14 @@ public class HanZriotService
         }
 
         _helpers.SetTeamScore(Team.T);
-        _helpers.TerminateRound(RoundEndReason.TerroristsWin, 8.0f);
+        _helpers.TerminateRound(RoundEndReason.TerroristsWin, 5.0f);
     }
 
     public void ForceDayEnd()
     {
         InvalidateRoundGeneration();
         ResetRoundRuntimeState(clearPlayerRoundState: true, clearKillCounters: true);
-        _helpers.TerminateRound(RoundEndReason.RoundDraw, 8.0f);
+        _helpers.TerminateRound(RoundEndReason.RoundDraw, 5.0f);
     }
 
     public void JoinTeamCheck(IPlayer player)
