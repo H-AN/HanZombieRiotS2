@@ -47,6 +47,7 @@ public class HanZriotHud
         var dayConfig = _dayConfig.GetConfig();
         int maxDay = dayConfig.Days.Count;
         var currentDay = HudGetCurrentDay(_globals.RiotDay);
+        int currentDayNumber = Math.Clamp(_globals.RiotDay, 1, maxDay);
 
         var localizer = _core.Translation.GetPlayerLocalizer(player);
 
@@ -67,7 +68,7 @@ public class HanZriotHud
 
 
         string message = $"<span><font color='#E22D2D'>{currentDay.DayName}</font></span><br>" +
-            $"<span><font color='#FFFFE0'>{localizer["Stage"]}:[{localizer["Progress"]}</font><font color='#87CEEB'>{_globals.RiotDay}</font><font color='#FFFFE0'>/</font><font color='#87CEEB'>{maxDay}</font><font color='#FFFFE0'>{localizer["Days"]}]</font></span><br>" +
+            $"<span><font color='#FFFFE0'>{localizer["Stage"]}:[{localizer["Progress"]}</font><font color='#87CEEB'>{currentDayNumber}</font><font color='#FFFFE0'>/</font><font color='#87CEEB'>{maxDay}</font><font color='#FFFFE0'>{localizer["Days"]}]</font></span><br>" +
             $"<span><font color='#FFFFE0'>{localizer["ZombiesLeft"]}:</font> <font color='#E22D2D'>{leftZombie}</font> <font color='#FFFFE0'>{localizer["ZCount"]}</font></span><br>" +
             $"<span><font color='#FFFFE0'>{localizer["HumanLeft"]}:</font> <font color='#00FF00'>{humanCount}</font> <font color='#FFFFE0'>{localizer["HCount"]}</font></span><br>" +
             $"{diffMessage}" +

@@ -13,7 +13,7 @@ namespace HanZombieRiotS2;
 
 [PluginMetadata(
     Id = "HanZombieRiotS2",
-    Version = "3.2.0",
+    Version = "4.0.0",
     Name = "僵尸暴动 for Sw2/HanZombieRiotS2",
     Author = "H-AN",
     Description = "CS2僵尸暴动 SW2版本 CS2 zombieriot for SW2.")]
@@ -29,6 +29,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
     private HanZriotHelpers _Helpers = null!;
     private HanZriotGlobals _Globals = null!;
     private HanZriotCommands _Commands = null!;
+    private HanZriotService _Services = null!;
     public override void Load(bool hotReload)
     {
 
@@ -65,6 +66,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
         _Events = ServiceProvider.GetRequiredService<HanZriotEvents>();
         _Helpers = ServiceProvider.GetRequiredService<HanZriotHelpers>();
         _Commands = ServiceProvider.GetRequiredService<HanZriotCommands>();
+        _Services = ServiceProvider.GetRequiredService<HanZriotService>();
 
         var ZriotCFGMonitor = ServiceProvider.GetRequiredService<IOptionsMonitor<HanZriotCFG>>();
 
@@ -87,6 +89,8 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 
     public override void Unload()
     {
+        Core.Event.OnMapLoad -= Event_OnMapLoad;
+        _Services.ResetPluginRuntimeState();
         ServiceProvider!.Dispose();
     }
 
@@ -131,16 +135,7 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
             return;
         }
 
-        _Globals.RiotDay = Math.Clamp(_Globals.RiotDay, 1, Daycfg.Days.Count);
-        var currentDay = _Helpers.GetCurrentDay(_Globals.RiotDay);
-        if (currentDay.BeforeZombie > 0)
-        {
-            _Globals.AllowHumanZombie = true;
-        }
-        else
-        {
-            _Globals.AllowHumanZombie = false;
-        }
+        _Services.SetCurrentDayClamped(_Globals.RiotDay);
 
     }
 

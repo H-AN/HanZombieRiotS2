@@ -7,9 +7,10 @@ public class HanZriotGlobals
     // ===== 数值类 =====
     public int NeedKillZombie { get; set; }
     public int ZombieKill { get; set; }
-    public int RiotDay { get; set; }
+    public int RiotDay { get; set; } = 1;
     public int Countdown { get; set; }
     public int KillCount { get; set; }
+    public int RoundGeneration { get; set; }
     public float KillPercent { get; set; }
 
     // ===== 布尔类 =====
@@ -17,11 +18,12 @@ public class HanZriotGlobals
     public bool HightDiff { get; set; } = false;
     public bool CurrentMapIsHighDiff { get; set; }
     public bool AllowHumanZombie { get; set; }
+    public bool SafeRoundStart { get; set; }
 
     // ===== 数组类（玩家状态） =====
     public float[] RebornSec { get; } = new float[65];
     public int[] BeAZombie { get; } = new int[65];
-    public int[] DeathTime { get; } = new int[65];
+    public int[] HumanRespawnRemaining { get; } = new int[65];
 
     public bool[] InProtect { get; } = new bool[65];
 
@@ -39,9 +41,6 @@ public class HanZriotGlobals
 
 
     public CancellationTokenSource?[] SpawnProtect { get; set; } = new CancellationTokenSource?[65];
-    public CancellationTokenSource?[] g_DeadCountDown { get; set; } = new CancellationTokenSource?[65];
-
-
     public CancellationTokenSource? g_HUDTimer { get; set; } = null;
     public CancellationTokenSource? g_DeathCountDown { get; set; } = null;
 

@@ -1,12 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mono.Cecil.Cil;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
 using SwiftlyS2.Shared.SchemaDefinitions;
-using static HanZombieRiotS2.ZombieDataConfig;
-
 
 namespace HanZombieRiotS2;
 
@@ -20,12 +17,14 @@ public class HanZriotService
     private readonly HanZriotHelpers _helpers;
     private readonly HanZriotGlobals _globals;
 
-
-    public HanZriotService(ISwiftlyCore core, ILogger<HanZriotService> logger,
+    public HanZriotService(
+        ISwiftlyCore core,
+        ILogger<HanZriotService> logger,
         IOptionsMonitor<HanZriotCFG> mainConfig,
         IStageConfigProvider dayConfig,
         IZombieConfigProvider zombieConfig,
-        HanZriotHelpers helpers, HanZriotGlobals globals)
+        HanZriotHelpers helpers,
+        HanZriotGlobals globals)
     {
         _core = core;
         _logger = logger;
@@ -36,107 +35,540 @@ public class HanZriotService
         _globals = globals;
     }
 
-    public void PossZombie(IPlayer client) //应用僵尸各项属性
+    private static CancellationTokenSource? CancelTimer(CancellationTokenSource? timer)
     {
-        if (client == null || !client.IsValid)
-            return;
+        if (timer == null)
+            return null;
 
-        var clientpawn = client.PlayerPawn;
-        if (clientpawn == null || !clientpawn.IsValid)
-            return;
-
-        var Controller = client.Controller;
-        if (Controller == null || !Controller.IsValid)
-            return;
-
-        var CFG = _mainConfig.CurrentValue;
-        var Dayconfig = _dayConfig.GetConfig(); //.CurrentValue;
-
-        clientpawn.ItemServices!.GiveItem<CCSWeaponBase>("weapon_knife");
-
-
-        if (CFG.ZombieNoBlock)
+        try
         {
-            _helpers.NoBlock(clientpawn);
+            timer.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
         }
 
-        // 获取当前关卡的僵尸数据
-        var currentDay = _helpers.GetCurrentDay(_globals.RiotDay);// RiotDay 从 1 开始
-        int currentDayIndex = Dayconfig.Days.IndexOf(currentDay); // 获取当前关卡的索引
-        var zombiesForLevel = _helpers.GetZombiesForCurrentLevel(currentDayIndex); // 传递索引
+        return null;
+    }
 
+    public int BeginRoundGeneration()
+    {
+        _globals.RoundGeneration++;
+        return _globals.RoundGeneration;
+    }
 
-        // 随机选择一个僵尸
-        if (zombiesForLevel.Count > 0)
+    public int InvalidateRoundGeneration()
+    {
+        _globals.RoundGeneration++;
+        return _globals.RoundGeneration;
+    }
+
+    public bool IsRoundGenerationCurrent(int generation)
+    {
+        return generation == _globals.RoundGeneration;
+    }
+
+    public int GetMaxDay()
+    {
+        return _dayConfig.GetConfig().Days?.Count ?? 0;
+    }
+
+    public int GetCurrentDay()
+    {
+        int maxDay = GetMaxDay();
+        if (maxDay <= 0)
         {
-            var randomZombie = zombiesForLevel[Random.Shared.Next(zombiesForLevel.Count)]; // 随机选择一个僵尸
+            _globals.RiotDay = 1;
+            return 1;
+        }
 
-            int maxhealth;
-            if (currentDay.HealthBoost > 0)
+        _globals.RiotDay = Math.Clamp(_globals.RiotDay, 1, maxDay);
+        return _globals.RiotDay;
+    }
+
+    public HanZriotDayConfig.Day? TryGetCurrentDayConfig()
+    {
+        var config = _dayConfig.GetConfig();
+        if (config.Days == null || config.Days.Count == 0)
+            return null;
+
+        int currentDay = GetCurrentDay();
+        return config.Days[currentDay - 1];
+    }
+
+    public bool TrySetCurrentDay(int day)
+    {
+        int maxDay = GetMaxDay();
+        if (maxDay <= 0 || day < 1 || day > maxDay)
+            return false;
+
+        _globals.RiotDay = day;
+        RefreshCurrentDayCorpseMode();
+        return true;
+    }
+
+    public int SetCurrentDayClamped(int day)
+    {
+        int maxDay = GetMaxDay();
+        if (maxDay <= 0)
+        {
+            _globals.RiotDay = 1;
+            _globals.AllowHumanZombie = false;
+            return 1;
+        }
+
+        _globals.RiotDay = Math.Clamp(day, 1, maxDay);
+        RefreshCurrentDayCorpseMode();
+        return _globals.RiotDay;
+    }
+
+    public int AdvanceToNextDay()
+    {
+        return SetCurrentDayClamped(GetCurrentDay() + 1);
+    }
+
+    public bool IsFinalDay()
+    {
+        int maxDay = GetMaxDay();
+        return maxDay > 0 && GetCurrentDay() >= maxDay;
+    }
+
+    public bool JumpToDayAndEnd(int day)
+    {
+        if (!TrySetCurrentDay(day))
+            return false;
+
+        ForceDayEnd();
+        return true;
+    }
+
+    public int SkipToNextDayAndEnd()
+    {
+        int nextDay = AdvanceToNextDay();
+        ForceDayEnd();
+        return nextDay;
+    }
+
+    public bool CurrentMapIsHighDifficulty()
+    {
+        return _globals.CurrentMapIsHighDiff;
+    }
+
+    public bool NextMapWillBeHighDifficulty()
+    {
+        return _globals.HightDiff;
+    }
+
+    public void SetNextMapHighDifficulty(bool enabled)
+    {
+        _globals.HightDiff = enabled;
+
+        if (enabled)
+        {
+            _globals.KillCount = Math.Max(_globals.KillCount, 1000);
+            _globals.KillPercent = 100f;
+        }
+        else if (!_globals.CurrentMapIsHighDiff)
+        {
+            _globals.KillCount = 0;
+            _globals.KillPercent = 0f;
+        }
+    }
+
+    public int GetCurrentDayBeforeZombieCount()
+    {
+        var currentDay = TryGetCurrentDayConfig();
+        return currentDay == null ? 0 : Math.Max(0, currentDay.BeforeZombie);
+    }
+
+    public void RefreshCurrentDayCorpseMode()
+    {
+        _globals.AllowHumanZombie = GetCurrentDayBeforeZombieCount() > 0;
+    }
+
+    public void ResetPlayerCorpseModeToCurrentDay(int playerId)
+    {
+        if (playerId < 0 || playerId >= _globals.BeAZombie.Length)
+            return;
+
+        ClearPendingHumanRespawn(playerId);
+        _globals.BeAZombie[playerId] = _globals.AllowHumanZombie ? GetCurrentDayBeforeZombieCount() : 0;
+    }
+
+    public bool IsPlayerMarkedForZombieRespawn(int playerId)
+    {
+        return playerId >= 0
+            && playerId < _globals.BeAZombie.Length
+            && _globals.BeAZombie[playerId] < 0;
+    }
+
+    public bool ConsumeHumanDeathAndCheckZombieRespawn(int playerId)
+    {
+        if (!_globals.AllowHumanZombie || playerId < 0 || playerId >= _globals.BeAZombie.Length)
+            return false;
+
+        int remainingHumanDeaths = _globals.BeAZombie[playerId];
+        if (remainingHumanDeaths <= 1)
+        {
+            _globals.BeAZombie[playerId] = -1;
+            return true;
+        }
+
+        _globals.BeAZombie[playerId] = remainingHumanDeaths - 1;
+        return false;
+    }
+
+    public int QueuePendingHumanRespawn(int playerId, float respawnDelaySeconds)
+    {
+        if (playerId < 0 || playerId >= _globals.HumanRespawnRemaining.Length)
+            return 0;
+
+        int roundedSeconds = Math.Max(0, (int)Math.Ceiling(respawnDelaySeconds));
+        _globals.HumanRespawnRemaining[playerId] = roundedSeconds;
+        return roundedSeconds;
+    }
+
+    public void ClearPendingHumanRespawn(int playerId)
+    {
+        if (playerId < 0 || playerId >= _globals.HumanRespawnRemaining.Length)
+            return;
+
+        _globals.HumanRespawnRemaining[playerId] = 0;
+    }
+
+    public int TickPendingHumanRespawn(int playerId)
+    {
+        if (playerId < 0 || playerId >= _globals.HumanRespawnRemaining.Length)
+            return 0;
+
+        int remaining = _globals.HumanRespawnRemaining[playerId];
+        if (remaining <= 0)
+            return 0;
+
+        remaining--;
+        _globals.HumanRespawnRemaining[playerId] = remaining;
+        return remaining;
+    }
+
+    public bool HasPendingHumanRespawns()
+    {
+        foreach (var player in _core.PlayerManager.GetAllPlayers())
+        {
+            if (player is not { IsValid: true } || player.IsFakeClient)
+                continue;
+
+            int playerId = player.PlayerID;
+            if (playerId < 0 || playerId >= _globals.HumanRespawnRemaining.Length)
+                continue;
+
+            if (_globals.HumanRespawnRemaining[playerId] > 0)
+                return true;
+        }
+
+        return false;
+    }
+
+    public int GetPlayerRemainingDeathsBeforeZombie(int playerId)
+    {
+        if (!_globals.AllowHumanZombie || playerId < 0 || playerId >= _globals.BeAZombie.Length)
+            return 0;
+
+        int remaining = _globals.BeAZombie[playerId];
+        return remaining < 0 ? 0 : remaining;
+    }
+
+    public void ResetPlayerRuntimeState(int playerId, bool resetHudState)
+    {
+        if (playerId < 0 || playerId >= _globals.RebornSec.Length)
+            return;
+
+        _globals.SpawnProtect[playerId] = CancelTimer(_globals.SpawnProtect[playerId]);
+
+        _globals.RebornSec[playerId] = 0.0f;
+        _globals.BeAZombie[playerId] = 0;
+        ClearPendingHumanRespawn(playerId);
+        _globals.InProtect[playerId] = false;
+        _globals.g_ZombieRegenStates.Remove(playerId);
+
+        if (resetHudState)
+        {
+            _globals.PlayerHud[playerId] = false;
+            _globals.PlayerDmgHud[playerId] = false;
+        }
+    }
+
+    public void ResetRoundRuntimeState(bool clearPlayerRoundState, bool clearKillCounters)
+    {
+        _globals.GameStart = false;
+        _globals.Countdown = 0;
+
+        _globals.SpawnAllZombie = CancelTimer(_globals.SpawnAllZombie);
+        _globals.g_DeathCheck = CancelTimer(_globals.g_DeathCheck);
+        _globals.g_hCountdown = CancelTimer(_globals.g_hCountdown);
+        _globals.g_hAmbMusic = CancelTimer(_globals.g_hAmbMusic);
+        _globals.g_HUDTimer = CancelTimer(_globals.g_HUDTimer);
+        _globals.g_DeathCountDown = CancelTimer(_globals.g_DeathCountDown);
+        _globals.g_ZombieRegenTimer = CancelTimer(_globals.g_ZombieRegenTimer);
+
+        if (clearKillCounters)
+        {
+            _globals.NeedKillZombie = 0;
+            _globals.ZombieKill = 0;
+        }
+
+        _globals.g_ZombieRegenStates.Clear();
+
+        if (clearPlayerRoundState)
+        {
+            for (int playerId = 0; playerId < _globals.RebornSec.Length; playerId++)
             {
-                maxhealth = currentDay.HealthBoost + randomZombie.Health;
-            }
-            else
-            {
-                maxhealth = randomZombie.Health;
-            }
-
-            clientpawn.SetModel(randomZombie.Model); // 设置模型
-            // 设置属性
-            if (currentDay.HealthBoost > 0)
-            {
-
-                clientpawn.Health = randomZombie.Health + currentDay.HealthBoost;
-                clientpawn.HealthUpdated();
-
-            }
-            else
-            {
-
-                clientpawn.Health = randomZombie.Health;
-                clientpawn.HealthUpdated();
-
-
-            }
-            
-            clientpawn.VelocityModifier = randomZombie.Speed > 0 ? randomZombie.Speed : 1.0f;
-            clientpawn.ActualGravityScale = randomZombie.Gravity > 0 ? randomZombie.Gravity : 0.8f;
-
-            if (randomZombie.HealthRevive > 0)
-            {
-                var now = Environment.TickCount / 1000f;
-                _globals.g_ZombieRegenStates[client.PlayerID] = new ZombieRegenState
-                {
-                    PlayerID = client.PlayerID,
-                    RegenAmount = randomZombie.HealthReviveHp,
-                    RegenInterval = randomZombie.HealthReviveSec,
-                    NextRegenTime = now + randomZombie.HealthReviveSec // 下一次回血时间
-                };
-            }
-
-            var ControllerEntity = Controller.Entity;
-            if (ControllerEntity != null && ControllerEntity.IsValid)
-            {
-                ControllerEntity.Name = randomZombie.Name;
+                ResetPlayerRuntimeState(playerId, resetHudState: false);
             }
         }
-        else
+
+        foreach (var player in _core.PlayerManager.GetAllPlayers())
         {
-            _core.Logger.LogError($"{_core.Localizer["NoZombieData"]}");
+            if (player is not { IsValid: true })
+                continue;
+
+            var controller = player.Controller;
+            if (controller?.Entity is { IsValid: true } entity)
+            {
+                entity.Name = string.Empty;
+            }
         }
+    }
+
+    public void ResetMapRuntimeState()
+    {
+        InvalidateRoundGeneration();
+        ResetRoundRuntimeState(clearPlayerRoundState: true, clearKillCounters: true);
+        _globals.RiotDay = 1;
+        _globals.AllowHumanZombie = false;
+        _core.Engine.ExecuteCommand("bot_quota 0");
+    }
+
+    public void ResetPluginRuntimeState()
+    {
+        ResetMapRuntimeState();
+    }
+
+    public void ForcePlayerHuman(IPlayer player)
+    {
+        if (player is not { IsValid: true })
+            return;
+
+        var controller = player.Controller;
+        if (controller is not { IsValid: true })
+            return;
+
+        var playerId = player.PlayerID;
+        ResetPlayerRuntimeState(playerId, resetHudState: false);
+        ResetPlayerCorpseModeToCurrentDay(playerId);
+
+        if (controller.Entity is { IsValid: true } entity)
+        {
+            entity.Name = string.Empty;
+        }
+
+        if (controller.TeamNum != (byte)Team.CT)
+        {
+            player.SwitchTeam(Team.CT);
+        }
+
+        int generation = _globals.RoundGeneration;
+        _core.Scheduler.DelayBySeconds(0.2f, () =>
+        {
+            if (!IsRoundGenerationCurrent(generation))
+                return;
+
+            if (player is not { IsValid: true } currentPlayer)
+                return;
+
+            if (currentPlayer.Controller is not { IsValid: true } currentController)
+                return;
+
+            if (!currentController.PawnIsAlive)
+            {
+                currentController.Respawn();
+            }
+        });
+    }
+
+    public void ForcePlayerZombie(IPlayer player)
+    {
+        if (player is not { IsValid: true })
+            return;
+
+        var controller = player.Controller;
+        if (controller is not { IsValid: true })
+            return;
+
+        int playerId = player.PlayerID;
+        ResetPlayerRuntimeState(playerId, resetHudState: false);
+        _globals.BeAZombie[playerId] = -1;
+
+        if (controller.TeamNum != (byte)Team.T)
+        {
+            player.SwitchTeam(Team.T);
+        }
+
+        int generation = _globals.RoundGeneration;
+        _core.Scheduler.DelayBySeconds(0.2f, () =>
+        {
+            if (!IsRoundGenerationCurrent(generation))
+                return;
+
+            if (player is not { IsValid: true } currentPlayer)
+                return;
+
+            if (currentPlayer.Controller is not { IsValid: true } currentController)
+                return;
+
+            if (!currentController.PawnIsAlive)
+            {
+                currentController.Respawn();
+                return;
+            }
+
+            PossZombie(currentPlayer);
+        });
+    }
+
+    public void PossZombie(IPlayer client)
+    {
+        if (client is not { IsValid: true })
+            return;
+
+        var clientPawn = client.PlayerPawn;
+        if (clientPawn is not { IsValid: true })
+            return;
+
+        var controller = client.Controller;
+        if (controller is not { IsValid: true })
+            return;
+
+        ChangeKnife(client);
+
+        if (_mainConfig.CurrentValue.ZombieNoBlock)
+        {
+            _helpers.NoBlock(clientPawn);
+        }
+
+        var currentDay = TryGetCurrentDayConfig();
+        if (currentDay == null)
+        {
+            _core.Logger.LogError(_core.Localizer["NoDayData"]);
+            return;
+        }
+
+        int currentDayIndex = GetCurrentDay() - 1;
+        var zombiesForLevel = _helpers.GetZombiesForCurrentLevel(currentDayIndex);
+
+        if (zombiesForLevel.Count == 0)
+        {
+            _core.Logger.LogError(_core.Localizer["NoZombieData"]);
+            return;
+        }
+
+        var randomZombie = _helpers.SelectZombieForSpawn(zombiesForLevel);
+        if (randomZombie == null)
+        {
+            _core.Logger.LogError(_core.Localizer["NoZombieData"]);
+            return;
+        }
+
+        int maxHealth = randomZombie.Health;
+        if (currentDay.HealthBoost > 0)
+        {
+            maxHealth += currentDay.HealthBoost;
+        }
+
+        _globals.g_ZombieRegenStates.Remove(client.PlayerID);
+
+        clientPawn.SetModel(randomZombie.Model);
+        clientPawn.MaxHealth = maxHealth;
+        clientPawn.MaxHealthUpdated();
+        clientPawn.Health = maxHealth;
+        clientPawn.HealthUpdated();
+        clientPawn.VelocityModifier = randomZombie.Speed > 0 ? randomZombie.Speed : 1.0f;
+        clientPawn.VelocityModifierUpdated();
+        clientPawn.ActualGravityScale = randomZombie.Gravity > 0 ? randomZombie.Gravity : 0.8f;
+
+        if (randomZombie.HealthRevive > 0)
+        {
+            float now = Environment.TickCount64 / 1000f;
+            _globals.g_ZombieRegenStates[client.PlayerID] = new ZombieRegenState
+            {
+                PlayerID = client.PlayerID,
+                RegenAmount = randomZombie.HealthReviveHp,
+                RegenInterval = randomZombie.HealthReviveSec,
+                NextRegenTime = now + randomZombie.HealthReviveSec
+            };
+        }
+
+        if (controller.Entity is { IsValid: true } controllerEntity)
+        {
+            controllerEntity.Name = randomZombie.Name;
+        }
+    }
+
+    public void ChangeKnife(IPlayer player)
+    {
+        if (player == null || !player.IsValid)
+            return;
+
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid)
+            return;
+
+        var controller = player.Controller;
+        if (controller == null || !controller.IsValid)
+            return;
+
+        if (controller.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+            return;
+
+        var ws = pawn.WeaponServices;
+        if (ws == null || !ws.IsValid)
+            return;
+
+        ws.DropWeaponBySlot(gear_slot_t.GEAR_SLOT_KNIFE);
+
+        var Is = pawn.ItemServices;
+        if (Is == null || !Is.IsValid)
+            return;
+
+        var weapon = Is.GiveItem<CCSWeaponBase>("weapon_knife");
+        if (weapon == null || !weapon.IsValid)
+            return;
+
+        weapon.AcceptInput("ChangeSubclass", "42");
+        weapon.AttributeManager.Item.Initialized = true;
+        weapon.AttributeManager.Item.ItemDefinitionIndex = 42;
+        weapon.SetModel("");
+        weapon.AttributeManager.Item.CustomName = "ZombieClaw";
+        weapon.AttributeManager.Item.CustomNameOverride = "ZombieClaw";
+        weapon.AttributeManager.Item.CustomNameUpdated();
 
     }
-    public void Round_Countdown()
+
+    public void Round_Countdown(int expectedRoundGeneration)
     {
-        var CFG = _mainConfig.CurrentValue;
+        if (!IsRoundGenerationCurrent(expectedRoundGeneration))
+            return;
+
+        var config = _mainConfig.CurrentValue;
         int currentDisplay = _globals.Countdown;
 
-        if (_globals.Countdown > 0) _globals.Countdown--;
-
-        if (currentDisplay <= 10 && currentDisplay >= 1 && CFG.SoundCountdown)
+        if (_globals.Countdown > 0)
         {
-            var soundList = CFG.SoundEventCountdown.Split(',');
+            _globals.Countdown--;
+        }
 
+        if (currentDisplay <= 10 && currentDisplay >= 1 && config.SoundCountdown)
+        {
+            var soundList = config.SoundEventCountdown.Split(',');
             int soundIndex = currentDisplay - 1;
 
             if (soundIndex >= 0 && soundIndex < soundList.Length)
@@ -144,9 +576,9 @@ public class HanZriotService
                 _helpers.EmitSoundToAll(soundList[soundIndex].Trim());
             }
         }
-        else if (currentDisplay == 20 && CFG.Soundremaining && !string.IsNullOrWhiteSpace(CFG.SoundEventremaining))
+        else if (currentDisplay == 20 && config.Soundremaining && !string.IsNullOrWhiteSpace(config.SoundEventremaining))
         {
-            var remaining = _helpers.RandomSelectSound(CFG.SoundEventremaining);
+            var remaining = _helpers.RandomSelectSound(config.SoundEventremaining);
             if (remaining != null)
             {
                 _helpers.EmitSoundToAll(remaining);
@@ -155,18 +587,19 @@ public class HanZriotService
 
         if (currentDisplay <= 0)
         {
-            _globals.g_hCountdown?.Cancel();
-            _globals.g_hCountdown = null;
+            _globals.g_hCountdown = CancelTimer(_globals.g_hCountdown);
             _globals.GameStart = true;
             _helpers.SetAllZombieUnFreeze();
-            if (CFG.SoundZombieStart && !string.IsNullOrWhiteSpace(CFG.SoundEventZombieStart))
+
+            if (config.SoundZombieStart && !string.IsNullOrWhiteSpace(config.SoundEventZombieStart))
             {
-                var ZombieStart = _helpers.RandomSelectSound(CFG.SoundEventZombieStart);
-                if (ZombieStart != null)
+                var zombieStart = _helpers.RandomSelectSound(config.SoundEventZombieStart);
+                if (zombieStart != null)
                 {
-                    _helpers.EmitSoundToAll(ZombieStart);
+                    _helpers.EmitSoundToAll(zombieStart);
                 }
             }
+
             return;
         }
 
@@ -179,64 +612,70 @@ public class HanZriotService
         }
     }
 
-
     public void FakeCtswin()
     {
-        var CFG = _mainConfig.CurrentValue;
-        var Dayconfig = _dayConfig.GetConfig();
-        var currentDay = _helpers.GetCurrentDay(_globals.RiotDay);
+        var config = _mainConfig.CurrentValue;
+        var currentDay = TryGetCurrentDayConfig();
+        int maxDay = GetMaxDay();
+        if (currentDay == null || maxDay <= 0)
+            return;
 
-        int maxDay = Dayconfig.Days.Count; // 获取关卡总数
-        _globals.GameStart = false;
+        InvalidateRoundGeneration();
+        ResetRoundRuntimeState(clearPlayerRoundState: true, clearKillCounters: false);
 
-        var allPlayers = _core.PlayerManager.GetAllPlayers();
-        foreach (var player in allPlayers)
+        foreach (var player in _core.PlayerManager.GetAllPlayers())
         {
+            if (player is not { IsValid: true })
+                continue;
+
             if (!player.IsFakeClient)
             {
-                if (_globals.RiotDay == maxDay)
+                if (GetCurrentDay() == maxDay)
                 {
-                    string Message = $"<span><font color='#E22D2D'>{_core.Translation.GetPlayerLocalizer(player)["ClearZombieOnMap"]}</font></span><br>" +
-                    $"<span><span><font color='#E22D2D'>{_core.Translation.GetPlayerLocalizer(player)["HumanTakeOver"]}</font></span><br>" +
-                    $"<span><span><font color='#00FF00'>{_core.Translation.GetPlayerLocalizer(player)["NextMap"]}</font></span>";
-                    player.SendMessage(MessageType.CenterHTML, $"{Message}");
+                    string message =
+                        $"<span><font color='#E22D2D'>{_core.Translation.GetPlayerLocalizer(player)["ClearZombieOnMap"]}</font></span><br>" +
+                        $"<span><span><font color='#E22D2D'>{_core.Translation.GetPlayerLocalizer(player)["HumanTakeOver"]}</font></span><br>" +
+                        $"<span><span><font color='#00FF00'>{_core.Translation.GetPlayerLocalizer(player)["NextMap"]}</font></span>";
+                    player.SendMessage(MessageType.CenterHTML, message);
                 }
                 else
                 {
-                    string Message = $"<span><font color='#E22D2D'>{_core.Translation.GetPlayerLocalizer(player)["HumanWins"]}</font></span><br>" +
-                    $"<span><font color='#E22D2D'>{_core.Translation.GetPlayerLocalizer(player)["ZombieClear"]}</font></span><br>" +
-                    $"<span><font color='#00FF00'>{_core.Translation.GetPlayerLocalizer(player)["NextDay"]}</font></span>";
-                    player.SendMessage(MessageType.CenterHTML, $"{Message}");
+                    string message =
+                        $"<span><font color='#E22D2D'>{_core.Translation.GetPlayerLocalizer(player)["HumanWins"]}</font></span><br>" +
+                        $"<span><font color='#E22D2D'>{_core.Translation.GetPlayerLocalizer(player)["ZombieClear"]}</font></span><br>" +
+                        $"<span><font color='#00FF00'>{_core.Translation.GetPlayerLocalizer(player)["NextDay"]}</font></span>";
+                    player.SendMessage(MessageType.CenterHTML, message);
                 }
 
                 _globals.InProtect[player.PlayerID] = true;
-
-                _globals.BeAZombie[player.PlayerID] = currentDay.BeforeZombie;
-                _globals.DeathTime[player.PlayerID] = 0;
+                ResetPlayerCorpseModeToCurrentDay(player.PlayerID);
             }
             else
             {
                 _helpers.SetFreezeState(player, true);
                 _helpers.TeleportZombie(player);
             }
-
         }
-        _globals.g_DeathCheck?.Cancel();
-        _globals.g_DeathCheck = null;
 
-        if (CFG.SoundHumanWins && !string.IsNullOrWhiteSpace(CFG.SoundEventHumanWins))
+        if (config.SoundHumanWins && !string.IsNullOrWhiteSpace(config.SoundEventHumanWins))
         {
-            var HumanWins = _helpers.RandomSelectSound(CFG.SoundEventHumanWins);
-            if (HumanWins != null)
+            var humanWins = _helpers.RandomSelectSound(config.SoundEventHumanWins);
+            if (humanWins != null)
             {
-                _helpers.EmitSoundToAll(HumanWins);
+                _helpers.EmitSoundToAll(humanWins);
             }
         }
 
-
-        if (_globals.RiotDay == maxDay)
+        if (GetCurrentDay() == maxDay)
         {
-            _core.Scheduler.DelayBySeconds(5.0f, () => { _helpers.ChangeMap(); });
+            int generation = _globals.RoundGeneration;
+            _core.Scheduler.DelayBySeconds(5.0f, () =>
+            {
+                if (IsRoundGenerationCurrent(generation))
+                {
+                    _helpers.ChangeMap();
+                }
+            });
         }
         else
         {
@@ -244,93 +683,84 @@ public class HanZriotService
             _helpers.TerminateRound(RoundEndReason.CTsWin, 8.0f);
         }
     }
+
     public void Faketswin()
     {
-        var CFG = _mainConfig.CurrentValue;
-        var Dayconfig = _dayConfig.GetConfig();
-        _globals.GameStart = false;
-        var currentDay = _helpers.GetCurrentDay(_globals.RiotDay);
-        var allPlayers = _core.PlayerManager.GetAllPlayers();
-        foreach (var player in allPlayers)
+        var config = _mainConfig.CurrentValue;
+        var currentDay = TryGetCurrentDayConfig();
+        if (currentDay == null)
+            return;
+
+        InvalidateRoundGeneration();
+        ResetRoundRuntimeState(clearPlayerRoundState: true, clearKillCounters: false);
+
+        foreach (var player in _core.PlayerManager.GetAllPlayers())
         {
-            if (!player.IsFakeClient) // 人类玩家
-            {
-                player.SendMessage(MessageType.CenterHTML, $"{_core.Translation.GetPlayerLocalizer(player)["ZombieWins"]}");
-                _globals.BeAZombie[player.PlayerID] = currentDay.BeforeZombie;
-                _globals.DeathTime[player.PlayerID] = 0;
-            }
+            if (player is not { IsValid: true } || player.IsFakeClient)
+                continue;
+
+            player.SendMessage(MessageType.CenterHTML, _core.Translation.GetPlayerLocalizer(player)["ZombieWins"]);
+            ResetPlayerCorpseModeToCurrentDay(player.PlayerID);
         }
 
-        if (CFG.SoundZombieWins && !string.IsNullOrWhiteSpace(CFG.SoundEventZombieWins))
+        if (config.SoundZombieWins && !string.IsNullOrWhiteSpace(config.SoundEventZombieWins))
         {
-            var ZombieWins = _helpers.RandomSelectSound(CFG.SoundEventZombieWins);
-            if (ZombieWins != null)
+            var zombieWins = _helpers.RandomSelectSound(config.SoundEventZombieWins);
+            if (zombieWins != null)
             {
-                _helpers.EmitSoundToAll(ZombieWins);
+                _helpers.EmitSoundToAll(zombieWins);
             }
         }
-
-        _globals.g_DeathCheck?.Cancel();
-        _globals.g_DeathCheck = null;
 
         _helpers.SetTeamScore(Team.T);
         _helpers.TerminateRound(RoundEndReason.TerroristsWin, 8.0f);
-
     }
 
     public void ForceDayEnd()
     {
-        _globals.GameStart = false;
-
-        _globals.g_hCountdown?.Cancel();
-        _globals.g_hCountdown = null;
-
-        _globals.ZombieKill = 0;
-
+        InvalidateRoundGeneration();
+        ResetRoundRuntimeState(clearPlayerRoundState: true, clearKillCounters: true);
         _helpers.TerminateRound(RoundEndReason.RoundDraw, 8.0f);
     }
 
     public void JoinTeamCheck(IPlayer player)
     {
-        if (player is not { IsValid: true } || player.Controller is not { IsValid: true } ctrl)
+        if (player is not { IsValid: true } || player.Controller is not { IsValid: true } controller)
             return;
 
         if (!_globals.GameStart)
         {
-            if (!ctrl.PawnIsAlive)
+            if (!controller.PawnIsAlive)
             {
-                ctrl.Respawn();
+                controller.Respawn();
             }
+
             return;
         }
 
-        var humanCount = _core.PlayerManager.GetCTAlive().Count();
-
+        int humanCount = _core.PlayerManager.GetCTAlive().Count();
         if (humanCount > 0)
         {
-            if (!ctrl.PawnIsAlive)
+            if (!controller.PawnIsAlive)
             {
-                ctrl.Respawn();
+                controller.Respawn();
             }
         }
-        else
+        else if (_globals.g_DeathCheck != null)
         {
-            if (_globals.g_DeathCheck != null)
-            {
-                Faketswin();
-            }
+            Faketswin();
         }
     }
-
 
     public void CheckHumanAlive()
     {
-        var humanCount = _core.PlayerManager.GetCTAlive().Count();
+        int humanCount = _core.PlayerManager.GetCTAlive().Count();
         if (humanCount <= 0 && _globals.GameStart)
         {
+            if (_globals.AllowHumanZombie && HasPendingHumanRespawns())
+                return;
+
             Faketswin();
-            _globals.GameStart = false;
         }
     }
-
 }

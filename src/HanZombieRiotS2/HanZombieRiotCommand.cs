@@ -81,7 +81,7 @@ public class HanZriotCommands
     {
         IPlayer? player = _core.PlayerManager.GetPlayer(playerId);
 
-        if (player.IsValid && !player.IsFakeClient)
+        if (player is { IsValid: true } && !player.IsFakeClient)
         {
             if (commandLine.StartsWith("jointeam 2"))
             {
@@ -116,11 +116,7 @@ public class HanZriotCommands
         if (player == null || !player.IsValid)
             return;
 
-        int maxDay = _dayConfig.GetConfig().Days.Count;
-
-        _globals.RiotDay = Math.Min(_globals.RiotDay + 1, maxDay);
-
-        _services.ForceDayEnd();
+        _services.SkipToNextDayAndEnd();
         _core.PlayerManager.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminNextDay", player.Controller.PlayerName]}");
     }
 
@@ -130,7 +126,7 @@ public class HanZriotCommands
         if (player == null || !player.IsValid)
             return;
 
-        int maxDay = _dayConfig.GetConfig().Days.Count;
+        int maxDay = _services.GetMaxDay();
         if (context.Args.Length < 1)
         {
             player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDayError1"]}");
@@ -143,9 +139,7 @@ public class HanZriotCommands
             return;
         }
 
-        _globals.RiotDay = count;
-
-        _services.ForceDayEnd();
+        _services.JumpToDayAndEnd(count);
 
         _core.PlayerManager.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDay", player.Controller.PlayerName, count]}");
     }
@@ -158,8 +152,7 @@ public class HanZriotCommands
         var Controller = player.Controller;
         if (Controller == null || !Controller.IsValid) return;
 
-        _globals.KillCount = 1000;
-        _globals.KillPercent = 100f;
+        _services.SetNextMapHighDifficulty(true);
         _core.PlayerManager.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["AdminSetDiff", Controller.PlayerName]}");
     }
 
@@ -211,7 +204,7 @@ public class HanZriotCommands
         var Controller = player.Controller;
         if (Controller == null || !Controller.IsValid) return;
 
-        if (context.Args.Length < 0)
+        if (context.Args.Length < 1)
             return;
 
 
@@ -232,8 +225,7 @@ public class HanZriotCommands
                             var targetController = target.Controller;
                             if (targetController != null && targetController.IsValid && targetController.PlayerName == targetName)
                             {
-                                _globals.BeAZombie[target.PlayerID] = 0;
-                                target.ChangeTeam(Team.CT);
+                                _services.ForcePlayerHuman(target);
                                 target.SendMessage(MessageType.Chat, $"{_globals.Countdown} {_core.Translation.GetPlayerLocalizer(player)["ForceJoinHuman"]}");
                             }
                         }
@@ -253,7 +245,7 @@ public class HanZriotCommands
         var Controller = player.Controller;
         if (Controller == null || !Controller.IsValid) return;
 
-        if (context.Args.Length < 0)
+        if (context.Args.Length < 1)
             return;
 
 
@@ -274,8 +266,7 @@ public class HanZriotCommands
                             var targetController = target.Controller;
                             if (targetController != null && targetController.IsValid && targetController.PlayerName == targetName)
                             {
-                                _globals.BeAZombie[player.PlayerID] = -1;
-                                target.ChangeTeam(Team.T);
+                                _services.ForcePlayerZombie(target);
                                 target.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["ForceJoinZombie"]}");
                             }
                         }
