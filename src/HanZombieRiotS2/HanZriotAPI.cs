@@ -34,6 +34,7 @@ public class HanZriotAPI : IHanZriotAPI, IDisposable
     public int ZombiesLeft => Math.Max(0, _globals.NeedKillZombie - _globals.ZombieKill);
     public int HumansAlive => _core.PlayerManager.GetCTAlive().Count();
     public int MaxDay => _services.GetMaxDay();
+    public string CurrentMapDifficulty => _services.GetCurrentMapDifficulty();
     public bool AllowHumanZombie => _globals.AllowHumanZombie;
     public int CurrentDayBeforeZombie => _services.GetCurrentDayBeforeZombieCount();
     public bool CurrentMapIsHighDifficulty => _services.CurrentMapIsHighDifficulty();

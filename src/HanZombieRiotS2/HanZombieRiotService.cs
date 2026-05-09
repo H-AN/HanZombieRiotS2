@@ -154,6 +154,11 @@ public class HanZriotService
         return _globals.CurrentMapIsHighDiff;
     }
 
+    public string GetCurrentMapDifficulty()
+    {
+        return _globals.CurrentMapIsHighDiff ? "high" : "normal";
+    }
+
     public bool NextMapWillBeHighDifficulty()
     {
         return _globals.HightDiff;
