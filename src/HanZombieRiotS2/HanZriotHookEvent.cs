@@ -4,8 +4,10 @@ using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Events;
 using SwiftlyS2.Shared.GameEventDefinitions;
 using SwiftlyS2.Shared.Misc;
+using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
 using SwiftlyS2.Shared.SchemaDefinitions;
+using SwiftlyS2.Shared.Schemas;
 
 namespace HanZombieRiotS2;
 
@@ -86,6 +88,73 @@ public class HanZriotEvents
     }
 
 
+
+    private static CCSPlayerPawn? TryAsPlayerPawn(CEntityInstance? entity)
+    {
+        if (entity == null || !entity.IsValid)
+            return null;
+
+        var pawn = entity.As<CCSPlayerPawn>();
+        if (pawn == null || !pawn.IsValid)
+            return null;
+
+        return pawn;
+    }
+
+    private static bool TryGetEntityFromHandle<T>(CHandle<T> handle, out T entity)
+        where T : class, ISchemaClass<T>
+    {
+        entity = null!;
+        if (!handle.IsValid)
+            return false;
+
+        var resolvedEntity = handle.Value;
+        if (resolvedEntity == null)
+            return false;
+
+        if (resolvedEntity is not CEntityInstance nativeEntity)
+        {
+            entity = resolvedEntity;
+            return true;
+        }
+
+        if (!nativeEntity.IsValid)
+            return false;
+
+        entity = resolvedEntity;
+        return true;
+    }
+
+    private static bool TryGetControllerFromPawn(CCSPlayerPawn? pawn, out CCSPlayerController controller)
+    {
+        controller = null!;
+        if (pawn == null || !pawn.IsValid)
+            return false;
+
+        var controllerHandle = pawn.Controller;
+        if (!controllerHandle.IsValid)
+            return false;
+
+        var resolvedController = controllerHandle.Value?.As<CCSPlayerController>();
+        if (resolvedController == null || !resolvedController.IsValid)
+            return false;
+
+        controller = resolvedController;
+        return true;
+    }
+
+    private static bool TryGetActiveWeapon(CCSPlayerPawn? pawn, out CBasePlayerWeapon activeWeapon)
+    {
+        activeWeapon = null!;
+        if (pawn == null || !pawn.IsValid)
+            return false;
+
+        var weaponServices = pawn.WeaponServices;
+        if (weaponServices == null || !weaponServices.IsValid)
+            return false;
+
+        return TryGetEntityFromHandle(weaponServices.ActiveWeapon, out activeWeapon);
+    }
 
     private void Event_OnTick()
     {
@@ -650,28 +719,25 @@ public class HanZriotEvents
         if (victim == null || !victim.IsValid)
             return;
 
-        var VictimPawn = victim.As<CCSPlayerPawn>();
-        if (VictimPawn == null || !VictimPawn.IsValid)
+        var VictimPawn = TryAsPlayerPawn(victim);
+        if (VictimPawn == null)
             return;
 
-        var VictimController = VictimPawn.Controller.Value?.As<CCSPlayerController>();
-        if (VictimController == null || !VictimController.IsValid)
+        if (!TryGetControllerFromPawn(VictimPawn, out var VictimController))
             return;
 
         var VictimPlayer = _core.PlayerManager.GetPlayerFromController(VictimController);
         if (VictimPlayer == null || !VictimPlayer.IsValid)
             return;
 
-        var attacker = @event.Info.Attacker.Value;
-        if (attacker == null || !attacker.IsValid)
+        if (!TryGetEntityFromHandle(@event.Info.Attacker, out var attacker))
             return;
 
-        var AttackerPawn = attacker.As<CCSPlayerPawn>();
-        if (AttackerPawn == null || !AttackerPawn.IsValid)
+        var AttackerPawn = TryAsPlayerPawn(attacker);
+        if (AttackerPawn == null)
             return;
 
-        var AttackerController = AttackerPawn.Controller.Value?.As<CCSPlayerController>();
-        if (AttackerController == null || !AttackerController.IsValid)
+        if (!TryGetControllerFromPawn(AttackerPawn, out var AttackerController))
             return;
 
         var AttackerPlayer = _core.PlayerManager.GetPlayerFromController(AttackerController);
@@ -911,12 +977,7 @@ public class HanZriotEvents
             if (pawn == null || !pawn.IsValid)
                 continue;
 
-            var weaponServices = pawn.WeaponServices;
-            if (weaponServices == null || !weaponServices.IsValid)
-                continue;
-
-            var activeWeapon = weaponServices.ActiveWeapon.Value;
-            if (activeWeapon == null || !activeWeapon.IsValid)
+            if (!TryGetActiveWeapon(pawn, out var activeWeapon))
                 continue;
 
             if (currentDay.NoRecoil)
@@ -1023,19 +1084,22 @@ public class HanZriotEvents
         if (victim == null || !victim.IsValid)
             return;
 
-        var VictimPawn = victim.As<CCSPlayerPawn>();
-        if (VictimPawn == null || !VictimPawn.IsValid)
+        var VictimPawn = TryAsPlayerPawn(victim);
+        if (VictimPawn == null)
             return;
 
-        var VictimController = VictimPawn.Controller.Value?.As<CCSPlayerController>();
-        if (VictimController == null || !VictimController.IsValid)
+        if (!TryGetControllerFromPawn(VictimPawn, out var VictimController))
             return;
 
         var VictimPlayer = _core.PlayerManager.GetPlayerFromController(VictimController);
         if (VictimPlayer == null || !VictimPlayer.IsValid)
             return;
 
-        if (VictimController.TeamNum == 3 && _globals.InProtect[VictimPlayer.PlayerID])
+        bool inProtect = VictimPlayer.PlayerID >= 0
+            && VictimPlayer.PlayerID < _globals.InProtect.Length
+            && _globals.InProtect[VictimPlayer.PlayerID];
+
+        if (VictimController.TeamNum == 3 && inProtect)
         {
             @event.Info.Damage = 0;
         }

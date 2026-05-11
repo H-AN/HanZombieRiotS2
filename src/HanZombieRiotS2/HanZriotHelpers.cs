@@ -6,6 +6,7 @@ using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
 using SwiftlyS2.Shared.ProtobufDefinitions;
 using SwiftlyS2.Shared.SchemaDefinitions;
+using SwiftlyS2.Shared.Schemas;
 using static HanZombieRiotS2.ZombieDataConfig;
 
 namespace HanZombieRiotS2;
@@ -111,6 +112,48 @@ public class HanZriotHelpers
         SetPlayerModelFixed(pawn, modelPath);
     }
 
+    private static bool TryGetEntityFromHandle<T>(CHandle<T> handle, out T entity)
+        where T : class, ISchemaClass<T>
+    {
+        entity = null!;
+        if (!handle.IsValid)
+            return false;
+
+        var resolvedEntity = handle.Value;
+        if (resolvedEntity == null)
+            return false;
+
+        if (resolvedEntity is not CEntityInstance nativeEntity)
+        {
+            entity = resolvedEntity;
+            return true;
+        }
+
+        if (!nativeEntity.IsValid)
+            return false;
+
+        entity = resolvedEntity;
+        return true;
+    }
+
+    private static bool TryGetControllerFromPawn(CCSPlayerPawn? pawn, out CCSPlayerController controller)
+    {
+        controller = null!;
+        if (pawn == null || !pawn.IsValid)
+            return false;
+
+        var controllerHandle = pawn.Controller;
+        if (!controllerHandle.IsValid)
+            return false;
+
+        var resolvedController = controllerHandle.Value?.As<CCSPlayerController>();
+        if (resolvedController == null || !resolvedController.IsValid)
+            return false;
+
+        controller = resolvedController;
+        return true;
+    }
+
     private bool TryGetPlayerIdentity(CCSPlayerPawn pawn, out int playerId, out ulong sessionId)
     {
         playerId = 0;
@@ -119,8 +162,7 @@ public class HanZriotHelpers
         if (pawn == null || !pawn.IsValid)
             return false;
 
-        var controller = pawn.Controller.Value?.As<CCSPlayerController>();
-        if (controller == null || !controller.IsValid)
+        if (!TryGetControllerFromPawn(pawn, out var controller))
             return false;
 
         var player = _core.PlayerManager.GetPlayer((int)(controller.Index - 1));
@@ -657,11 +699,10 @@ public class HanZriotHelpers
         if (grenade == null || !grenade.IsValid || !grenade.IsValidEntity)
             return;
 
-        if (!grenade.Thrower.IsValid || grenade.Thrower.Value == null || !grenade.Thrower.Value.IsValidEntity)
+        if (!TryGetEntityFromHandle(grenade.Thrower, out var pawn))
             return;
 
-        var pawn = grenade.Thrower.Value;
-        if (pawn == null || !pawn.IsValid)
+        if (!pawn.IsValidEntity)
             return;
 
         var player = _core.PlayerManager.GetPlayerFromPawn(pawn);
