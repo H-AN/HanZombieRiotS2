@@ -61,7 +61,7 @@ https://github.com/H-AN/HanZombieSounds
 插件可结合以下创意工坊资源使用（示例）：
 ```
 音效 : 3644652779
-丧尸模型 : ❗ 由于模型版权方要求,模型示例已经不再提供,本插件适用于任何角色模型,请自行寻找模型进行使用!
+丧尸模型 : 3718944950
 
 要使用创意工坊资源,需要服务器安装metamod插件 multiaddonmanager 来管理服务器和玩家使用下载和安装创意工坊资源
 
@@ -288,8 +288,7 @@ bot_join_team T and mp_limitteams 0
 You may use the plugin with the following workshop resources:
 ```
 sounds : 3644652779
-zombie models : ❗Due to copyright restrictions, we no longer provide model examples. 
-This plugin is compatible with any character model; please find a suitable model to use!
+zombie models : 3718944950 
 
 To use Workshop resources, your server must install the Metamod plugin: multiaddonmanager
 
