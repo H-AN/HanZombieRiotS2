@@ -197,7 +197,7 @@
         "ZombieScale": 1.0
       },
       {
-        "Name": "normalzombieab",
+        "Name": "normalzombieb",
         "Model": "agents/models/han/hanzombie/normalzombieab/normalzombieab.vmdl",
         "Health": 1000,
         "Speed": 1.0,

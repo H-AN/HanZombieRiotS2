@@ -2,81 +2,81 @@
   "ZriotDayCFG": {
     "Days": [
       {
-        "DayName": "第1天de_overpass",
-        "Count": 5,
-        "HealthBoost": 0,
-        "BeforeZombie": 0,
-        "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "Zombienormal1,Zombienormal2",
-        "InfiniteReserveAmmo": false,
-        "InfiniteClipAmmo": false,
-        "NoRecoil": false
-      },
-      {
-        "DayName": "第2天de_overpass",
-        "Count": 10,
-        "HealthBoost": 0,
-        "BeforeZombie": 0,
-        "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "Zombienormal1,Zombienormal2",
-        "InfiniteReserveAmmo": false,
-        "InfiniteClipAmmo": false,
-        "NoRecoil": false
-      },
-      {
-        "DayName": "第3天de_overpass",
+        "DayName": "开端!!",
         "Count": 15,
         "HealthBoost": 0,
         "BeforeZombie": 0,
-        "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "ZombieLight,ZombieHeavy",
-        "InfiniteReserveAmmo": false,
+        "Storyline": "丧尸病毒爆发，城市陷入混乱",
+        "ZombieOverride": "xiaohei,xiaolan,xiaohong",
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
-        "DayName": "第4天de_overpass",
-        "Count": 20,
-        "HealthBoost": 0,
+        "DayName": "起义!!",
+        "Count": 35,
+        "HealthBoost": 25,
         "BeforeZombie": 0,
-        "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "Zombiemother,Zombiepolice",
-        "InfiniteReserveAmmo": false,
+        "Storyline": "面对丧尸的威胁，幸存者们开始组织起义。",
+        "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb",
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
-        "DayName": "第5天de_overpass",
-        "Count": 25,
-        "HealthBoost": 0,
+        "DayName": "暴动!!",
+        "Count": 50,
+        "HealthBoost": 50,
         "BeforeZombie": 0,
-        "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "Zombiesherif,zombiebomb",
-        "InfiniteReserveAmmo": false,
+        "Storyline": "丧尸已经暴动，城市陷入了更深的混乱。",
+        "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb,boomer_v2,hunter,smoker",
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
-        "DayName": "第6天de_overpass",
-        "Count": 30,
-        "HealthBoost": 0,
+        "DayName": "探察敌情!!",
+        "Count": 75,
+        "HealthBoost": 70,
         "BeforeZombie": 0,
-        "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "zombief,zombierange",
-        "InfiniteReserveAmmo": false,
+        "Storyline": "灭杀小队开始探察敌情，发现了丧尸的更多变种",
+        "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb,boomer_v2,hunter,smoker,krueger,leatherface,myers,billy",
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
-        "DayName": "第7天de_overpass",
-        "Count": 3,
-        "HealthBoost": 10000,
+        "DayName": "全面进攻!!",
+        "Count": 100,
+        "HealthBoost": 100,
         "BeforeZombie": 0,
-        "Storyline": "故事线1de_overpass",
-        "ZombieOverride": "",
-        "InfiniteReserveAmmo": false,
+        "Storyline": "找到丧尸的巢穴，展开全面进攻。",
+        "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb,boomer_v2,hunter,smoker,krueger,leatherface,myers,billy,deimos,speed,stamper,xiaoao",
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
+      },
+      {
+        "DayName": "变异!!",
+        "Count": 150,
+        "HealthBoost": 120,
+        "BeforeZombie": 0,
+        "Storyline": "丧尸出现了变异，变得更加强大和危险。",
+        "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb,boomer_v2,hunter,smoker,krueger,leatherface,myers,billy,deimos,speed,stamper,xiaoao,bombzombie,fzombie,lightzombie,policezombie,rangezombie,sherifzombie",
+        "InfiniteReserveAmmo": true,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": true
+      },
+      {
+        "DayName": "终局!!",
+        "Count": 5,
+        "HealthBoost": 2000,
+        "BeforeZombie": 0,
+        "Storyline": "最终的决战即将来临，幸存者们必须全力以赴。",
+        "ZombieOverride": "molong,witch,hostzombie,heavyzombie,muti",
+        "InfiniteReserveAmmo": true,
+        "InfiniteClipAmmo": false,
+        "NoRecoil": true
       }
     ]
   }

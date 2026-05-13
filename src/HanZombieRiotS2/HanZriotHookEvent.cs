@@ -371,8 +371,8 @@ public class HanZriotEvents
             return HookResult.Continue;
 
         var weapon = @event.Weapon;
-        var dmgHealth = @event.DmgHealth;
-        var hitgroup = @event.HitGroup;
+        var dmgHealth = @event.ActualDmgHealth;
+        var hitgroup = @event.ActualHitGroup;
 
         if (attackerPawn.TeamNum == 3 && playerPawn.TeamNum == 2)
         {
@@ -386,7 +386,7 @@ public class HanZriotEvents
                 _helpers.GiveCash(attacker, dmgHealth, "hurt");
             }
 
-            if (hitgroup == 1)
+            if (hitgroup == HitGroup_t.HITGROUP_HEAD)
             {
                 if (CFG.SoundZombiePain && !string.IsNullOrWhiteSpace(CFG.SoundEventZombiePain))
                 {

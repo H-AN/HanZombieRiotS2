@@ -1,7 +1,7 @@
 {
   "ZriotCFG": {
     "useworkshopmap": 0,
-    "HumandefaultModel": "",
+    "HumandefaultModel": "agents/models/han/csol2player/arctic/arctic.vmdl",
     "HurtMoney": true,
     "HurtMoneyMessage": true,
     "DeathMoney": 100,
@@ -25,15 +25,15 @@
     "SoundRoundstartMusic": true,
     "SoundEventRoundstartMusic": "han.zombie.round.class_start,han.zombie.round.class_startB",
     "SoundZombieHurt": true,
-    "SoundEventZombieHurt": "han.hl.zombie.pain",
+    "SoundEventZombieHurt": "han.zombieplague.zpain",
     "SoundZombieDead": true,
-    "SoundEventZombieDead": "han.hl.zombie.die",
+    "SoundEventZombieDead": "han.zombieplague.zdie",
     "SoundZombiePain": true,
-    "SoundEventZombiePain": "han.hl.zombie.pain",
+    "SoundEventZombiePain": "han.zombieplague.nemesispain",
     "SoundAmbSound": true,
     "SoundEventAmbSound": "han.zombie.amb.zriot",
     "AmbSoundLoopTime": 60,
     "AdminCommandPermission": "admin.dex",
-    "PrecacheSoundEvent": "soundevents/hanroundvoxs.vsndevts"
+    "PrecacheSoundEvent": "soundevents/hanroundvoxs.vsndevts,soundevents/hanzombieplagueplayers.vsndevts"
   }
 }

@@ -1,7 +1,7 @@
 {
   "ZriotGrenadeCFG": {
     "FireGrenade": {
-      "ExplosionDamage": 300,
+      "ExplosionDamage": 50,
       "ExplosionRadius": 500,
       "BurnDamage": 5,
       "BurnDuration": 10,

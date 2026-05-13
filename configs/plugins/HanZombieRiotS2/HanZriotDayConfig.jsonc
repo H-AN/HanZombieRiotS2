@@ -6,77 +6,77 @@
         "Count": 15,
         "HealthBoost": 0,
         "BeforeZombie": 0,
-        "Storyline": "丧尸病毒爆发，城市陷入混乱。幸存者们必须团结起来，寻找生存的希望。",
+        "Storyline": "丧尸病毒爆发，城市陷入混乱",
         "ZombieOverride": "xiaohei,xiaolan,xiaohong",
-        "InfiniteReserveAmmo": false,
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
         "DayName": "起义!!",
         "Count": 35,
         "HealthBoost": 25,
         "BeforeZombie": 0,
-        "Storyline": "面对丧尸的威胁，幸存者们开始组织起义，试图夺回被丧尸占领的城市。",
+        "Storyline": "面对丧尸的威胁，幸存者们开始组织起义。",
         "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb",
-        "InfiniteReserveAmmo": false,
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
         "DayName": "暴动!!",
         "Count": 50,
         "HealthBoost": 50,
         "BeforeZombie": 0,
-        "Storyline": "丧尸已经暴动，城市陷入了更深的混乱。幸存者们必须面对越来越强大的丧尸威胁。",
+        "Storyline": "丧尸已经暴动，城市陷入了更深的混乱。",
         "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb,boomer_v2,hunter,smoker",
-        "InfiniteReserveAmmo": false,
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
         "DayName": "探察敌情!!",
         "Count": 75,
         "HealthBoost": 70,
         "BeforeZombie": 0,
-        "Storyline": "灭杀小队开始探察敌情，发现了丧尸的更多变种和更强大的敌人。幸存者们必须做好准备迎接更大的挑战。",
+        "Storyline": "灭杀小队开始探察敌情，发现了丧尸的更多变种",
         "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb,boomer_v2,hunter,smoker,krueger,leatherface,myers,billy",
-        "InfiniteReserveAmmo": false,
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
         "DayName": "全面进攻!!",
         "Count": 100,
         "HealthBoost": 100,
         "BeforeZombie": 0,
-        "Storyline": "找到丧尸的巢穴，展开全面进攻。幸存者们必须团结一致，才能有机会消灭丧尸的威胁。",
+        "Storyline": "找到丧尸的巢穴，展开全面进攻。",
         "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb,boomer_v2,hunter,smoker,krueger,leatherface,myers,billy,deimos,speed,stamper,xiaoao",
-        "InfiniteReserveAmmo": false,
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
         "DayName": "变异!!",
         "Count": 150,
         "HealthBoost": 120,
         "BeforeZombie": 0,
-        "Storyline": "丧尸出现了变异，变得更加强大和危险。幸存者们必须适应新的威胁，寻找新的方法来对抗丧尸。",
+        "Storyline": "丧尸出现了变异，变得更加强大和危险。",
         "ZombieOverride": "xiaohei,xiaolan,xiaohong,groot,normalzombiea,normalzombieb,boomer_v2,hunter,smoker,krueger,leatherface,myers,billy,deimos,speed,stamper,xiaoao,bombzombie,fzombie,lightzombie,policezombie,rangezombie,sherifzombie",
-        "InfiniteReserveAmmo": false,
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       },
       {
         "DayName": "终局!!",
         "Count": 5,
         "HealthBoost": 2000,
         "BeforeZombie": 0,
-        "Storyline": "最终的决战即将来临，幸存者们必须全力以赴，才能有机会消灭丧尸的威胁，迎来新的希望。",
+        "Storyline": "最终的决战即将来临，幸存者们必须全力以赴。",
         "ZombieOverride": "molong,witch,hostzombie,heavyzombie,muti",
-        "InfiniteReserveAmmo": false,
+        "InfiniteReserveAmmo": true,
         "InfiniteClipAmmo": false,
-        "NoRecoil": false
+        "NoRecoil": true
       }
     ]
   }
