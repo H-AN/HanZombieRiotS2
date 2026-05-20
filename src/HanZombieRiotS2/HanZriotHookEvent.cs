@@ -23,6 +23,8 @@ public class HanZriotEvents
     private readonly HanZriotGlobals _globals;
     private readonly HanZriotHud _hud;
     private readonly HanZriotService _services;
+    private ZombieDataConfig? _cachedZombieDamageConfig;
+    private readonly Dictionary<string, float> _zombieDamageByName = new(StringComparer.Ordinal);
     public HanZriotEvents(ISwiftlyCore core, ILogger<HanZriotEvents> logger,
         IOptionsMonitor<HanZriotCFG> mainConfig,
         IStageConfigProvider dayConfig,
@@ -66,7 +68,6 @@ public class HanZriotEvents
         _core.Event.OnEntityTakeDamage += Event_OnEntityTakeDamage;
         _core.Event.OnTick += Event_OnTick;
         _core.Event.OnWeaponServicesCanUseHook += Event_OnWeaponServicesCanUseHook;
-        _core.Event.OnEntityTakeDamage += Event_Protect;
 
     }
 
@@ -85,75 +86,6 @@ public class HanZriotEvents
         {
             @event.SetResult(false); // 阻止使用
         }
-    }
-
-
-
-    private static CCSPlayerPawn? TryAsPlayerPawn(CEntityInstance? entity)
-    {
-        if (entity == null || !entity.IsValid)
-            return null;
-
-        var pawn = entity.As<CCSPlayerPawn>();
-        if (pawn == null || !pawn.IsValid)
-            return null;
-
-        return pawn;
-    }
-
-    private static bool TryGetEntityFromHandle<T>(CHandle<T> handle, out T entity)
-        where T : class, ISchemaClass<T>
-    {
-        entity = null!;
-        if (!handle.IsValid)
-            return false;
-
-        var resolvedEntity = handle.Value;
-        if (resolvedEntity == null)
-            return false;
-
-        if (resolvedEntity is not CEntityInstance nativeEntity)
-        {
-            entity = resolvedEntity;
-            return true;
-        }
-
-        if (!nativeEntity.IsValid)
-            return false;
-
-        entity = resolvedEntity;
-        return true;
-    }
-
-    private static bool TryGetControllerFromPawn(CCSPlayerPawn? pawn, out CCSPlayerController controller)
-    {
-        controller = null!;
-        if (pawn == null || !pawn.IsValid)
-            return false;
-
-        var controllerHandle = pawn.Controller;
-        if (!controllerHandle.IsValid)
-            return false;
-
-        var resolvedController = controllerHandle.Value?.As<CCSPlayerController>();
-        if (resolvedController == null || !resolvedController.IsValid)
-            return false;
-
-        controller = resolvedController;
-        return true;
-    }
-
-    private static bool TryGetActiveWeapon(CCSPlayerPawn? pawn, out CBasePlayerWeapon activeWeapon)
-    {
-        activeWeapon = null!;
-        if (pawn == null || !pawn.IsValid)
-            return false;
-
-        var weaponServices = pawn.WeaponServices;
-        if (weaponServices == null || !weaponServices.IsValid)
-            return false;
-
-        return TryGetEntityFromHandle(weaponServices.ActiveWeapon, out activeWeapon);
     }
 
     private void Event_OnTick()
@@ -181,12 +113,17 @@ public class HanZriotEvents
         if (string.IsNullOrWhiteSpace(entity.DesignerName) || !entity.DesignerName.Contains("_projectile", StringComparison.OrdinalIgnoreCase))
             return;
 
-        _core.Scheduler.NextTick(() =>
+        var entityIndex = entity.Index;
+        _core.Scheduler.NextWorldUpdate(() =>
         {
-            if (entity.IsValid && entity.IsValidEntity)
-            {
-                _helpers.CheckGrenadeSpawned(entity);
-            }
+            var currentEntity = _core.EntitySystem.GetEntityByIndex<CEntityInstance>(entityIndex);
+            if (currentEntity == null || !currentEntity.IsValid || !currentEntity.IsValidEntity)
+                return;
+
+            if (string.IsNullOrWhiteSpace(currentEntity.DesignerName) || !currentEntity.DesignerName.Contains("_projectile", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            _helpers.CheckGrenadeSpawned(currentEntity);
         });
     }
 
@@ -306,6 +243,7 @@ public class HanZriotEvents
             var team = pawn.TeamNum;
 
             var slot = player.PlayerID;
+            ulong sessionId = player.SessionId;
 
             if (player.IsFakeClient)
             {
@@ -316,10 +254,14 @@ public class HanZriotEvents
                         _helpers.SetFreezeState(player, true);
                         _core.Scheduler.DelayBySeconds((float)_globals.Countdown, () =>
                         {
-                            if (_services.IsRoundGenerationCurrent(roundGeneration) && player is { IsValid: true })
-                            {
-                                _helpers.SetFreezeState(player, false);
-                            }
+                            if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                                return;
+
+                            var currentPlayer = _core.PlayerManager.GetPlayer(slot);
+                            if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                                return;
+
+                            _helpers.SetFreezeState(currentPlayer, false);
                         });
                     }
                 }
@@ -351,32 +293,31 @@ public class HanZriotEvents
             return HookResult.Continue;
 
         var playerController = @event.UserIdController;
-        if (playerController == null || !playerController.IsValid)
+        if (!playerController.IsValid)
             return HookResult.Continue;
 
-        var playerPawn = player.PlayerPawn;
-        if (playerPawn == null || !playerPawn.IsValid)
+        var playerPawn = @event.UserIdPawn;
+        if (!playerPawn.IsValid)
             return HookResult.Continue;
 
         var attacker = @event.AttackerPlayer;
         if (attacker == null || !attacker.IsValid)
             return HookResult.Continue;
 
-        var attackerPawn = attacker.PlayerPawn;
-        if (attackerPawn == null || !attackerPawn.IsValid)
+        var attackerPawn = @event.AttackerPawn;
+        if (!attackerPawn.IsValid)
             return HookResult.Continue;
 
-        var attackerController = attacker.Controller;
-        if (attackerController == null || !attackerController.IsValid)
+        var attackerController = @event.AttackerController;
+        if (!attackerController.IsValid)
             return HookResult.Continue;
 
-        var weapon = @event.Weapon;
         var dmgHealth = @event.ActualDmgHealth;
         var hitgroup = @event.ActualHitGroup;
 
         if (attackerPawn.TeamNum == 3 && playerPawn.TeamNum == 2)
         {
-            int LeftZombie = _globals.NeedKillZombie - _globals.ZombieKill;
+            //int LeftZombie = _globals.NeedKillZombie - _globals.ZombieKill;
             var remainingHP = playerPawn.Health;
 
             var CFG = _mainConfig.CurrentValue;
@@ -435,57 +376,83 @@ public class HanZriotEvents
 
         _services.CheckHumanAlive();
         var attacker = @event.AttackerPlayer;
-        bool attackerValid = attacker is { IsValid: true };
+        if (attacker == null || !attacker.IsValid)
+            return HookResult.Continue;
 
         var deather = @event.UserIdPlayer;
         if (deather == null || !deather.IsValid)
             return HookResult.Continue;
 
         var deatherController = @event.UserIdController;
-        if (deatherController == null || !deatherController.IsValid)
+        if (!deatherController.IsValid)
             return HookResult.Continue;
 
-        var deatherPawn = deather.PlayerPawn;
-        if (deatherPawn == null || !deatherPawn.IsValid)
+        var deatherPawn = @event.UserIdPawn;
+        if (!deatherPawn.IsValid)
             return HookResult.Continue;
-        byte deathTeam = deatherPawn.TeamNum;
 
+        int deatherPlayerId = deather.PlayerID;
+        ulong deatherSessionId = deather.SessionId;
+        bool deatherWasZombie = deatherPawn.TeamNum == 2;
+        bool deatherWasHuman = deatherPawn.TeamNum == 3;
+        int attackerPlayerId = attacker.PlayerID;
+        ulong attackerSessionId = attacker.SessionId;
         int roundGeneration = _helpers.GetCurrentRoundGeneration();
         var dayConfig = _dayConfig.GetConfig();
         var CFG = _mainConfig.CurrentValue;
         int maxDay = dayConfig.Days.Count;
 
-        _services.ClearPendingHumanRespawn(deather.PlayerID);
+        _services.ClearPendingHumanRespawn(deatherPlayerId);
 
-        _core.Scheduler.NextTick(() =>
+        _core.Scheduler.NextWorldUpdate(() =>
         {
             if (!_services.IsRoundGenerationCurrent(roundGeneration))
                 return;
 
-            if (deathTeam == 2)
+            var currentDeather = _core.PlayerManager.GetPlayer(deatherPlayerId);
+            if (currentDeather == null || !currentDeather.IsValid || currentDeather.SessionId != deatherSessionId)
+                return;
+
+            var currentDeatherController = currentDeather.Controller;
+            if (currentDeatherController == null || !currentDeatherController.IsValid)
+                return;
+
+            if (deatherWasZombie)
             {
-                var deatherControllerEntity = deatherController.Entity;
-                if (deatherControllerEntity != null && deatherControllerEntity.IsValid)
+                var deatherControllerEntity = currentDeatherController.Entity;
+                if (deatherControllerEntity != null && deatherControllerEntity.EntityInstance is { IsValid: true, IsValidEntity: true })
                 {
                     deatherControllerEntity.Name = "";
                 }
-                _services.SetCurrentZombieName(deather.PlayerID, null);
-                _helpers.ClearPlayerGrenadeEffects(deather.PlayerID);
-                _globals.g_ZombieRegenStates.Remove(deather.PlayerID);
+                _services.SetCurrentZombieName(deatherPlayerId, null);
+                _helpers.ClearPlayerGrenadeEffects(deatherPlayerId);
+                _globals.g_ZombieRegenStates.Remove(deatherPlayerId);
 
                 if (_globals.GameStart)
                 {
                     _core.Scheduler.DelayBySeconds(1.0f, () =>
                     {
-                        if (_services.IsRoundGenerationCurrent(roundGeneration))
-                        {
-                            _helpers.RespawnClient(deatherController);
-                        }
+                        if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                            return;
+
+                        var respawnPlayer = _core.PlayerManager.GetPlayer(deatherPlayerId);
+                        if (respawnPlayer == null || !respawnPlayer.IsValid || respawnPlayer.SessionId != deatherSessionId)
+                            return;
+
+                        var respawnController = respawnPlayer.Controller;
+                        if (respawnController == null || !respawnController.IsValid)
+                            return;
+
+                        _helpers.RespawnClient(respawnController);
                     });
 
-                    if (attackerValid && CFG.DeathMoney > 0)
+                    if (CFG.DeathMoney > 0)
                     {
-                        _helpers.GiveCash(attacker!, CFG.DeathMoney, "death");
+                        var currentAttacker = _core.PlayerManager.GetPlayer(attackerPlayerId);
+                        if (currentAttacker != null && currentAttacker.IsValid && currentAttacker.SessionId == attackerSessionId)
+                        {
+                            _helpers.GiveCash(currentAttacker, CFG.DeathMoney, "death");
+                        }
                     }
 
                     if (CFG.SoundZombieDead && !string.IsNullOrWhiteSpace(CFG.SoundEventZombieDead))
@@ -493,7 +460,7 @@ public class HanZriotEvents
                         var deadSounds = _helpers.RandomSelectSound(CFG.SoundEventZombieDead);
                         if (deadSounds != null)
                         {
-                            _helpers.EmitSoundToEntity(deather, deadSounds);
+                            _helpers.EmitSoundToEntity(currentDeather, deadSounds);
                         }
                     }
 
@@ -517,42 +484,58 @@ public class HanZriotEvents
                 }
             }
 
-            if (deathTeam == 3)
+            if (deatherWasHuman)
             {
                 if (_globals.GameStart)
                 {
-                    bool respawnAsZombie = _services.ConsumeHumanDeathAndCheckZombieRespawn(deather.PlayerID);
+                    bool respawnAsZombie = _services.ConsumeHumanDeathAndCheckZombieRespawn(deatherPlayerId);
 
                     if (_globals.AllowHumanZombie && respawnAsZombie)
                     {
                         _core.Scheduler.DelayBySeconds(1.0f, () =>
                         {
-                            if (_services.IsRoundGenerationCurrent(roundGeneration))
-                            {
-                                _helpers.RespawnClient(deatherController);
-                            }
+                            if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                                return;
+
+                            var respawnPlayer = _core.PlayerManager.GetPlayer(deatherPlayerId);
+                            if (respawnPlayer == null || !respawnPlayer.IsValid || respawnPlayer.SessionId != deatherSessionId)
+                                return;
+
+                            var respawnController = respawnPlayer.Controller;
+                            if (respawnController == null || !respawnController.IsValid)
+                                return;
+
+                            _helpers.RespawnClient(respawnController);
                         });
                     }
                     else
                     {
-                        float respawnSeconds = _globals.RebornSec[deather.PlayerID] > 0
-                            ? _globals.RebornSec[deather.PlayerID]
+                        float respawnSeconds = _globals.RebornSec[deatherPlayerId] > 0
+                            ? _globals.RebornSec[deatherPlayerId]
                             : CFG.HumanRebornSec;
-                        int respawnDelay = _services.QueuePendingHumanRespawn(deather.PlayerID, respawnSeconds);
-                        deather.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(deather)["DeathInfo", respawnDelay]}");
+                        int respawnDelay = _services.QueuePendingHumanRespawn(deatherPlayerId, respawnSeconds);
+                        currentDeather.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(currentDeather)["DeathInfo", respawnDelay]}");
 
                         if (respawnDelay > 0)
                         {
-                            deather.SendMessage(MessageType.CenterHTML, $"{_core.Translation.GetPlayerLocalizer(deather)["ReSpawn", respawnDelay]}");
+                            currentDeather.SendMessage(MessageType.CenterHTML, $"{_core.Translation.GetPlayerLocalizer(currentDeather)["ReSpawn", respawnDelay]}");
                         }
                         else
                         {
                             _core.Scheduler.NextTick(() =>
                             {
-                                if (_services.IsRoundGenerationCurrent(roundGeneration))
-                                {
-                                    _helpers.RespawnClient(deatherController);
-                                }
+                                if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                                    return;
+
+                                var respawnPlayer = _core.PlayerManager.GetPlayer(deatherPlayerId);
+                                if (respawnPlayer == null || !respawnPlayer.IsValid || respawnPlayer.SessionId != deatherSessionId)
+                                    return;
+
+                                var respawnController = respawnPlayer.Controller;
+                                if (respawnController == null || !respawnController.IsValid)
+                                    return;
+
+                                _helpers.RespawnClient(respawnController);
                             });
                         }
                     }
@@ -561,10 +544,18 @@ public class HanZriotEvents
                 {
                     _core.Scheduler.DelayBySeconds(1.0f, () =>
                     {
-                        if (_services.IsRoundGenerationCurrent(roundGeneration))
-                        {
-                            deatherController.Respawn();
-                        }
+                        if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                            return;
+
+                        var respawnPlayer = _core.PlayerManager.GetPlayer(deatherPlayerId);
+                        if (respawnPlayer == null || !respawnPlayer.IsValid || respawnPlayer.SessionId != deatherSessionId)
+                            return;
+
+                        var respawnController = respawnPlayer.Controller;
+                        if (respawnController == null || !respawnController.IsValid)
+                            return;
+
+                        _helpers.RespawnClient(respawnController);
                     });
                 }
             }
@@ -579,104 +570,137 @@ public class HanZriotEvents
         if (player == null || !player.IsValid)
             return HookResult.Continue;
 
-        var playerpawn = player.PlayerPawn;
-        if (playerpawn == null || !playerpawn.IsValid)
+        var playerpawn = @event.UserIdPawn;
+        if (!playerpawn.IsValid)
             return HookResult.Continue;
 
-        var playerController = player.Controller;
-        if (playerController == null || !playerController.IsValid)
+        var playerController = @event.UserIdController;
+        if (!playerController.IsValid)
             return HookResult.Continue;
 
+        int playerId = player.PlayerID;
+        ulong sessionId = player.SessionId;
         int roundGeneration = _helpers.GetCurrentRoundGeneration();
         var CFG = _mainConfig.CurrentValue;
 
         if (!player.IsFakeClient)
         {
-            _services.ClearPendingHumanRespawn(player.PlayerID);
+            _services.ClearPendingHumanRespawn(playerId);
 
-            if (_services.IsPlayerMarkedForZombieRespawn(player.PlayerID))
+            if (_services.IsPlayerMarkedForZombieRespawn(playerId))
             {
                 if (playerpawn.TeamNum != 2)
                 {
                     player.SwitchTeam(Team.T);
                 }
 
-                _core.Scheduler.DelayBySeconds(0.05f, () =>
+                _core.Scheduler.DelayBySeconds(0.1f, () =>
                 {
-                    if (_services.IsRoundGenerationCurrent(roundGeneration))
-                    {
-                        _services.PossZombie(player);
-                    }
+                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                        return;
+
+                    var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                    if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                        return;
+
+                    _services.PossZombie(currentPlayer);
                 });
 
                 if (!_globals.GameStart)
                 {
                     _core.Scheduler.DelayBySeconds(0.5f, () =>
                     {
-                        if (_services.IsRoundGenerationCurrent(roundGeneration) && player is { IsValid: true })
-                        {
-                            _helpers.SetFreezeState(player, true);
-                        }
+                        if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                            return;
+
+                        var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                        if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                            return;
+
+                        _helpers.SetFreezeState(currentPlayer, true);
                     });
                 }
 
                 return HookResult.Continue;
             }
 
-            _globals.RebornSec[player.PlayerID] = (int)Math.Ceiling(CFG.HumanRebornSec);
-            _services.SetCurrentZombieName(player.PlayerID, null);
-            _services.ResetSpecialGrenadeLifeUsage(player.PlayerID);
+            _globals.RebornSec[playerId] = (int)Math.Ceiling(CFG.HumanRebornSec);
+            _services.SetCurrentZombieName(playerId, null);
+            _services.ResetSpecialGrenadeLifeUsage(playerId);
             if (playerpawn.TeamNum != 3)
             {
                 player.SwitchTeam(Team.CT);
             }
 
-            _core.Scheduler.DelayBySeconds(0.05f, () =>
+            _core.Scheduler.DelayBySeconds(0.1f, () =>
             {
-                if (player is { IsValid: true })
-                {
-                    _helpers.ApplyHumanDefaultModel(player);
-                    GiveConfiguredGrenadesOnSpawn(player);
-                }
+                if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                    return;
+
+                var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                    return;
+
+                _helpers.ApplyHumanDefaultModel(currentPlayer);
+                GiveConfiguredGrenadesOnSpawn(currentPlayer);
             });
 
-            if (_globals.AllowHumanZombie && _globals.BeAZombie[player.PlayerID] == 0)
+            if (_globals.AllowHumanZombie && _globals.BeAZombie[playerId] == 0)
             {
-                _services.ResetPlayerCorpseModeToCurrentDay(player.PlayerID);
+                _services.ResetPlayerCorpseModeToCurrentDay(playerId);
             }
 
             if (CFG.SpawnProtect)
             {
                 _core.Scheduler.DelayBySeconds(0.2f, () =>
                 {
-                    if (_services.IsRoundGenerationCurrent(roundGeneration) && player is { IsValid: true })
-                    {
-                        _globals.InProtect[player.PlayerID] = true;
-                    }
+                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                        return;
+
+                    var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                    if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                        return;
+
+                    var currentController = currentPlayer.Controller;
+                    if (currentController == null || !currentController.IsValid || !currentController.PawnIsAlive)
+                        return;
+
+                    _globals.InProtect[playerId] = true;
                 });
 
-                _globals.SpawnProtect[player.PlayerID]?.Cancel();
-                _globals.SpawnProtect[player.PlayerID] = null;
-                _globals.SpawnProtect[player.PlayerID] = _core.Scheduler.DelayBySeconds(CFG.SpawnProtectCount, () =>
+                _globals.SpawnProtect[playerId]?.Cancel();
+                _globals.SpawnProtect[playerId] = null;
+                _globals.SpawnProtect[playerId] = _core.Scheduler.DelayBySeconds(CFG.SpawnProtectCount, () =>
                 {
-                    if (_services.IsRoundGenerationCurrent(roundGeneration))
-                    {
-                        _helpers.DeleSpawnProtect(player);
-                    }
+                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                        return;
+
+                    var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                    if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                        return;
+
+                    _helpers.DeleSpawnProtect(currentPlayer);
                 });
                 player.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(player)["SpawnProtect", CFG.SpawnProtectCount]}");
             }
 
             if (CFG.HumanNoBlock)
             {
-                var pawn = player.PlayerPawn;
-                if (pawn != null && pawn.IsValid)
+                _core.Scheduler.NextWorldUpdate(() =>
                 {
-                    _core.Scheduler.NextTick(() =>
-                    {
-                        _helpers.NoBlock(pawn);
-                    });
-                }
+                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                        return;
+
+                    var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                    if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                        return;
+
+                    var currentPawn = currentPlayer.PlayerPawn;
+                    if (currentPawn == null || !currentPawn.IsValid || currentPawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+                        return;
+
+                    _helpers.NoBlock(currentPawn);
+                });
             }
 
         }
@@ -688,16 +712,27 @@ public class HanZriotEvents
             }
             _core.Scheduler.DelayBySeconds(0.05f, () =>
             {
-                    _services.PossZombie(player);
+                if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                    return;
+
+                var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                    return;
+
+                _services.PossZombie(currentPlayer);
             });
             if (!_globals.GameStart)
             {
                 _core.Scheduler.DelayBySeconds(0.5f, () =>
                 {
-                    if (_services.IsRoundGenerationCurrent(roundGeneration) && player is { IsValid: true })
-                    {
-                        _helpers.SetFreezeState(player, true);
-                    }
+                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                        return;
+
+                    var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                    if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                        return;
+
+                    _helpers.SetFreezeState(currentPlayer, true);
                 });
             }
         }
@@ -716,52 +751,78 @@ public class HanZriotEvents
     private void Event_OnEntityTakeDamage(IOnEntityTakeDamageEvent @event)
     {
         var victim = @event.Entity;
-        if (victim == null || !victim.IsValid)
+        if (victim == null || !victim.IsValid || !victim.IsValidEntity)
             return;
 
-        var VictimPawn = TryAsPlayerPawn(victim);
-        if (VictimPawn == null)
+        var victimPawn = victim.As<CCSPlayerPawn>();
+        if (!victimPawn.IsValid)
             return;
 
-        if (!TryGetControllerFromPawn(VictimPawn, out var VictimController))
+        var victimPlayer = victimPawn.ToPlayer();
+        if (victimPlayer == null || !victimPlayer.IsValid)
             return;
 
-        var VictimPlayer = _core.PlayerManager.GetPlayerFromController(VictimController);
-        if (VictimPlayer == null || !VictimPlayer.IsValid)
+        var victimController = victimPlayer.Controller;
+        if (!victimController.IsValid)
             return;
 
-        if (!TryGetEntityFromHandle(@event.Info.Attacker, out var attacker))
-            return;
+        bool inProtect = victimPlayer.PlayerID >= 0
+            && victimPlayer.PlayerID < _globals.InProtect.Length
+            && _globals.InProtect[victimPlayer.PlayerID];
 
-        var AttackerPawn = TryAsPlayerPawn(attacker);
-        if (AttackerPawn == null)
-            return;
-
-        if (!TryGetControllerFromPawn(AttackerPawn, out var AttackerController))
-            return;
-
-        var AttackerPlayer = _core.PlayerManager.GetPlayerFromController(AttackerController);
-        if (AttackerPlayer == null || !AttackerPlayer.IsValid)
-            return;
-
-        var ZombieCFG = _zombieConfig.GetConfig();//.CurrentValue;
-        var ZombieList = ZombieCFG.ZombieList;
-
-        var AttackerControllerEntity = AttackerController.Entity;
-        if (AttackerControllerEntity == null || !AttackerControllerEntity.IsValid)
-            return;
-
-        if (AttackerController.TeamNum == 2 && VictimController.TeamNum == 3)
+        if ((victimController.TeamNum == 3 && inProtect) || (victimController.TeamNum == 2 && !_globals.GameStart))
         {
-            foreach (var zombie in ZombieList)
+            @event.Info.Damage = 0;
+            return;
+        }
+
+        var attackerHandle = @event.Info.Attacker;
+        if (!attackerHandle.IsValid)
+            return;
+
+        var attackerInstance = attackerHandle.Value!;
+        if (attackerInstance is not CCSPlayerPawn attackerPawn || !attackerPawn.IsValid)
+            return;
+
+        var attackerPlayer = attackerPawn.ToPlayer();
+        if (attackerPlayer == null || !attackerPlayer.IsValid)
+            return;
+
+        var attackerController = attackerPlayer.Controller;
+        if (!attackerController.IsValid)
+            return;
+
+        if (attackerController.TeamNum != 2 || victimController.TeamNum != 3)
+            return;
+
+        var zombieName = _services.GetCurrentZombieName(attackerPlayer.PlayerID);
+        if (string.IsNullOrWhiteSpace(zombieName))
+            return;
+
+        if (TryGetZombieAdditionalDamage(zombieName, out var additionalDamage) && additionalDamage != 0f)
+        {
+            @event.Info.Damage += additionalDamage;
+        }
+    }
+
+    private bool TryGetZombieAdditionalDamage(string zombieName, out float damage)
+    {
+        var zombieConfig = _zombieConfig.GetConfig();
+        if (!ReferenceEquals(_cachedZombieDamageConfig, zombieConfig))
+        {
+            _zombieDamageByName.Clear();
+            foreach (var zombie in zombieConfig.ZombieList)
             {
-                if (AttackerControllerEntity.Name == zombie.Name)
+                if (!string.IsNullOrWhiteSpace(zombie.Name))
                 {
-                    @event.Info.Damage += zombie.Damage;
-                    VictimPlayer.SendMessage(MessageType.Chat, $"{_core.Translation.GetPlayerLocalizer(VictimPlayer)["ZombieDamage", AttackerController.PlayerName, VictimController.PlayerName, @event.Info.Damage]}");
+                    _zombieDamageByName[zombie.Name] = zombie.Damage;
                 }
             }
+
+            _cachedZombieDamageConfig = zombieConfig;
         }
+
+        return _zombieDamageByName.TryGetValue(zombieName, out damage);
     }
 
     private void Event_OnPrecacheResource(IOnPrecacheResourceEvent @event)
@@ -866,7 +927,7 @@ public class HanZriotEvents
 
         SwiftlyS2.Shared.Natives.Vector position = new(@event.X, @event.Y, @event.Z);
         var light = _helpers.CreateGrenadeLight(position, config.LightRadius, config.Brightness, config.Sound);
-        if (light == null || !light.IsValid)
+        if (light == null || !light.IsValid || !light.IsValidEntity)
             return HookResult.Continue;
 
         uint lightIndex = light.Index;
@@ -924,10 +985,10 @@ public class HanZriotEvents
         @event.BlindDuration = 0f;
 
         var pawn = @event.UserIdPawn;
-        if (pawn != null && pawn.IsValid)
-        {
-            pawn.BlindUntilTime.Value = _core.Engine.GlobalVars.CurrentTime;
-        }
+        if (!pawn.IsValid)
+            return HookResult.Continue;
+
+        pawn.BlindUntilTime.Value = _core.Engine.GlobalVars.CurrentTime;
 
         return HookResult.Continue;
     }
@@ -966,18 +1027,24 @@ public class HanZriotEvents
 
         foreach (var player in _core.PlayerManager.GetAllPlayers())
         {
-            if (player is not { IsValid: true })
+            if (player == null || !player.IsValid)
                 continue;
 
-            var controller = player.Controller;
-            if (controller == null || !controller.IsValid || controller.TeamNum != (byte)Team.CT || !controller.PawnIsAlive)
+            if(!player.IsAlive)
+                continue;
+
+            if (player.IsFakeClient)
                 continue;
 
             var pawn = player.PlayerPawn;
             if (pawn == null || !pawn.IsValid)
                 continue;
 
-            if (!TryGetActiveWeapon(pawn, out var activeWeapon))
+            if(pawn.TeamNum != 3)
+                continue;
+
+            var weaponServices = pawn.WeaponServices;
+            if (weaponServices == null || !weaponServices.IsValid)
                 continue;
 
             if (currentDay.NoRecoil)
@@ -993,6 +1060,14 @@ public class HanZriotEvents
                     aimPunchServices.PredictableBaseAngleVel.Roll = 0;
                 }
             }
+
+            var activeWeaponHandle = weaponServices.ActiveWeapon;
+            if (!activeWeaponHandle.IsValid)
+                continue;
+
+            var activeWeapon = activeWeaponHandle.Value!;
+            if (!activeWeapon.IsValid || !activeWeapon.IsValidEntity)
+                continue;
 
             if (IsWeaponExcludedFromAmmoRules(activeWeapon.DesignerName))
                 continue;
@@ -1026,11 +1101,17 @@ public class HanZriotEvents
 
     private void GiveConfiguredGrenadesOnSpawn(IPlayer player)
     {
-        if (player is not { IsValid: true })
+        if (player == null || !player.IsValid)
             return;
 
-        var controller = player.Controller;
-        if (controller == null || !controller.IsValid || controller.TeamNum != (byte)Team.CT || !controller.PawnIsAlive)
+        if(player.IsFakeClient || !player.IsAlive)
+            return;
+
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid)
+            return;
+
+        if (pawn.TeamNum != 3)
             return;
 
         var grenadeConfig = _grenadeConfig.GetConfig();
@@ -1076,39 +1157,6 @@ public class HanZriotEvents
         {
             entity.AcceptInput("kill", 0);
         }
-    }
-
-    private void Event_Protect(IOnEntityTakeDamageEvent @event)
-    {
-        var victim = @event.Entity;
-        if (victim == null || !victim.IsValid)
-            return;
-
-        var VictimPawn = TryAsPlayerPawn(victim);
-        if (VictimPawn == null)
-            return;
-
-        if (!TryGetControllerFromPawn(VictimPawn, out var VictimController))
-            return;
-
-        var VictimPlayer = _core.PlayerManager.GetPlayerFromController(VictimController);
-        if (VictimPlayer == null || !VictimPlayer.IsValid)
-            return;
-
-        bool inProtect = VictimPlayer.PlayerID >= 0
-            && VictimPlayer.PlayerID < _globals.InProtect.Length
-            && _globals.InProtect[VictimPlayer.PlayerID];
-
-        if (VictimController.TeamNum == 3 && inProtect)
-        {
-            @event.Info.Damage = 0;
-        }
-
-        if (VictimController.TeamNum == 2 && !_globals.GameStart)
-        {
-            @event.Info.Damage = 0;
-        }
-
     }
 
 }

@@ -91,9 +91,18 @@ public class HanZriotCommands
             else if (commandLine.StartsWith("jointeam 3"))
             {
                 player.SwitchTeam(Team.CT);
+                ulong sessionId = player.SessionId;
+                int roundGeneration = _helpers.GetCurrentRoundGeneration();
                 _core.Scheduler.DelayBySeconds(1.0f, () =>
                 {
-                    _services.JoinTeamCheck(player);
+                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                        return;
+
+                    var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                    if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+                        return;
+
+                    _services.JoinTeamCheck(currentPlayer);
                 });
 
 

@@ -52,53 +52,9 @@ public class HanZriotHelpers
         return expectedRoundGeneration == _globals.RoundGeneration;
     }
 
-    public bool TryResolveCurrentPlayer(int playerId, ulong expectedSessionId, int expectedRoundGeneration, out IPlayer player, bool requireAlive = false)
-    {
-        player = null!;
-
-        if (!IsRoundGenerationCurrent(expectedRoundGeneration))
-            return false;
-
-        var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
-        if (currentPlayer == null || !currentPlayer.IsValid || !_core.PlayerManager.IsPlayerOnline(playerId))
-            return false;
-
-        if (expectedSessionId != 0 && currentPlayer.SessionId != expectedSessionId)
-            return false;
-
-        if (requireAlive)
-        {
-            var controller = currentPlayer.Controller;
-            if (controller == null || !controller.IsValid || controller.LifeState != (byte)LifeState_t.LIFE_ALIVE)
-                return false;
-        }
-
-        player = currentPlayer;
-        return true;
-    }
-
-    public bool TryResolveCurrentPlayerPawn(int playerId, ulong expectedSessionId, int expectedRoundGeneration, out IPlayer player, out CCSPlayerPawn pawn, bool requireAlive = false)
-    {
-        player = null!;
-        pawn = null!;
-
-        if (!TryResolveCurrentPlayer(playerId, expectedSessionId, expectedRoundGeneration, out player, requireAlive))
-            return false;
-
-        var currentPawn = player.PlayerPawn;
-        if (currentPawn == null || !currentPawn.IsValid)
-            return false;
-
-        if (requireAlive && currentPawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
-            return false;
-
-        pawn = currentPawn;
-        return true;
-    }
-
     public void ApplyHumanDefaultModel(IPlayer player)
     {
-        if (player is not { IsValid: true })
+        if (player == null || !player.IsValid)
             return;
 
         string modelPath = _mainConfig.CurrentValue.HumandefaultModel;
@@ -112,68 +68,6 @@ public class HanZriotHelpers
         SetPlayerModelFixed(pawn, modelPath);
     }
 
-    private static bool TryGetEntityFromHandle<T>(CHandle<T> handle, out T entity)
-        where T : class, ISchemaClass<T>
-    {
-        entity = null!;
-        if (!handle.IsValid)
-            return false;
-
-        var resolvedEntity = handle.Value;
-        if (resolvedEntity == null)
-            return false;
-
-        if (resolvedEntity is not CEntityInstance nativeEntity)
-        {
-            entity = resolvedEntity;
-            return true;
-        }
-
-        if (!nativeEntity.IsValid)
-            return false;
-
-        entity = resolvedEntity;
-        return true;
-    }
-
-    private static bool TryGetControllerFromPawn(CCSPlayerPawn? pawn, out CCSPlayerController controller)
-    {
-        controller = null!;
-        if (pawn == null || !pawn.IsValid)
-            return false;
-
-        var controllerHandle = pawn.Controller;
-        if (!controllerHandle.IsValid)
-            return false;
-
-        var resolvedController = controllerHandle.Value?.As<CCSPlayerController>();
-        if (resolvedController == null || !resolvedController.IsValid)
-            return false;
-
-        controller = resolvedController;
-        return true;
-    }
-
-    private bool TryGetPlayerIdentity(CCSPlayerPawn pawn, out int playerId, out ulong sessionId)
-    {
-        playerId = 0;
-        sessionId = 0;
-
-        if (pawn == null || !pawn.IsValid)
-            return false;
-
-        if (!TryGetControllerFromPawn(pawn, out var controller))
-            return false;
-
-        var player = _core.PlayerManager.GetPlayer((int)(controller.Index - 1));
-        if (player == null || !player.IsValid)
-            return false;
-
-        playerId = player.PlayerID;
-        sessionId = player.SessionId;
-        return true;
-    }
-
     public void SetPlayerModelFixed(CCSPlayerPawn pawn, string modelPath)
     {
         if (pawn == null || !pawn.IsValid)
@@ -185,16 +79,31 @@ public class HanZriotHelpers
         if (string.IsNullOrWhiteSpace(modelPath))
             return;
 
-        if (!TryGetPlayerIdentity(pawn, out var playerId, out var sessionId))
+        var player = pawn.ToPlayer();
+        if (player == null || !player.IsValid)
             return;
 
+        int playerId = player.PlayerID;
+        var sessionId = player.SessionId;
         pawn.SetModel(modelPath);
         FixPlayerModelAnimations(playerId, sessionId, GetCurrentRoundGeneration(), pawn.AbsVelocity);
     }
 
     private void FixPlayerModelAnimations(int playerId, ulong sessionId, int expectedRoundGeneration, Vector originalVelocity)
     {
-        if (!TryResolveCurrentPlayerPawn(playerId, sessionId, expectedRoundGeneration, out _, out var currentPawn, requireAlive: true))
+        if (!IsRoundGenerationCurrent(expectedRoundGeneration))
+            return;
+
+        var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+        if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
+            return;
+
+        var currentController = currentPlayer.Controller;
+        if (currentController == null || !currentController.IsValid || currentController.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+            return;
+
+        var currentPawn = currentPlayer.PlayerPawn;
+        if (currentPawn == null || !currentPawn.IsValid || currentPawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
             return;
 
         currentPawn.Teleport(null, null, new Vector(0, 0, 0));
@@ -204,7 +113,19 @@ public class HanZriotHelpers
 
         _core.Scheduler.DelayBySeconds(0.02f, () =>
         {
-            if (!TryResolveCurrentPlayerPawn(playerId, sessionId, expectedRoundGeneration, out _, out var resolvedPawn, requireAlive: true))
+            if (!IsRoundGenerationCurrent(expectedRoundGeneration))
+                return;
+
+            var resolvedPlayer = _core.PlayerManager.GetPlayer(playerId);
+            if (resolvedPlayer == null || !resolvedPlayer.IsValid || resolvedPlayer.SessionId != sessionId)
+                return;
+
+            var resolvedController = resolvedPlayer.Controller;
+            if (resolvedController == null || !resolvedController.IsValid || resolvedController.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+                return;
+
+            var resolvedPawn = resolvedPlayer.PlayerPawn;
+            if (resolvedPawn == null || !resolvedPawn.IsValid || resolvedPawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
                 return;
 
             resolvedPawn.MoveType = MoveType_t.MOVETYPE_WALK;
@@ -345,12 +266,15 @@ public class HanZriotHelpers
         if (string.IsNullOrEmpty(SoundPath))
             return;
 
-        var pwan = player.PlayerPawn;
-        if (pwan == null || !pwan.IsValid)
+        if (player == null || !player.IsValid)
+            return;
+
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid)
             return;
 
         var sound = new SwiftlyS2.Shared.Sounds.SoundEvent(SoundPath, 1.0f, 1.0f);
-        sound.SourceEntityIndex = (int)pwan.Index;;
+        sound.SourceEntityIndex = (int)pawn.Index;
         sound.Recipients.AddAllPlayers();
         _core.Scheduler.NextTick(() =>
         {
@@ -374,7 +298,7 @@ public class HanZriotHelpers
 
     public void GiveGrenade(IPlayer player, string weaponName)
     {
-        if (player is not { IsValid: true })
+        if (player == null || !player.IsValid)
             return;
 
         var pawn = player.PlayerPawn;
@@ -467,10 +391,14 @@ public class HanZriotHelpers
 
     public void ApplySpecialGrenadeBurn(IPlayer attacker, IPlayer zombie, float burnDamage, float duration, string particlePath, string soundPath)
     {
-        if (attacker is not { IsValid: true } || zombie is not { IsValid: true })
+        if(attacker == null || !attacker.IsValid || zombie == null || !zombie.IsValid)
             return;
 
         int playerId = zombie.PlayerID;
+        ulong zombieSessionId = zombie.SessionId;
+        int attackerPlayerId = attacker.PlayerID;
+        ulong attackerSessionId = attacker.SessionId;
+        int roundGeneration = GetCurrentRoundGeneration();
         ClearPlayerGrenadeBurn(playerId);
 
         if (duration <= 0f)
@@ -493,13 +421,20 @@ public class HanZriotHelpers
         CancellationTokenSource? timer = null;
         timer = _core.Scheduler.RepeatBySeconds(0.2f, () =>
         {
-            if (zombie is not { IsValid: true })
+            if (!IsRoundGenerationCurrent(roundGeneration))
             {
                 ClearPlayerGrenadeBurn(playerId);
                 return;
             }
 
-            var currentPawn = zombie.PlayerPawn;
+            var currentZombie = _core.PlayerManager.GetPlayer(playerId);
+            if (currentZombie == null || !currentZombie.IsValid || currentZombie.SessionId != zombieSessionId)
+            {
+                ClearPlayerGrenadeBurn(playerId);
+                return;
+            }
+
+            var currentPawn = currentZombie.PlayerPawn;
             if (currentPawn == null || !currentPawn.IsValid)
             {
                 ClearPlayerGrenadeBurn(playerId);
@@ -514,7 +449,11 @@ public class HanZriotHelpers
 
             if (burnDamage > 0f)
             {
-                ApplyDamage(attacker, zombie, burnDamage, DamageTypes_t.DMG_BURN);
+                var currentAttacker = _core.PlayerManager.GetPlayer(attackerPlayerId);
+                if (currentAttacker != null && currentAttacker.IsValid && currentAttacker.SessionId == attackerSessionId)
+                {
+                    ApplyDamage(currentAttacker, currentZombie, burnDamage, DamageTypes_t.DMG_BURN);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(soundPath) && _core.Engine.GlobalVars.CurrentTime - lastSoundTime >= 1.0f)
@@ -522,7 +461,7 @@ public class HanZriotHelpers
                 var sound = RandomSelectSound(soundPath);
                 if (!string.IsNullOrWhiteSpace(sound))
                 {
-                    EmitSoundToEntity(zombie, sound);
+                    EmitSoundToEntity(currentZombie, sound);
                 }
 
                 lastSoundTime = _core.Engine.GlobalVars.CurrentTime;
@@ -699,13 +638,15 @@ public class HanZriotHelpers
         if (grenade == null || !grenade.IsValid || !grenade.IsValidEntity)
             return;
 
-        if (!TryGetEntityFromHandle(grenade.Thrower, out var pawn))
+        var throwerHandle = grenade.Thrower;
+        if (!throwerHandle.IsValid)
             return;
 
-        if (!pawn.IsValidEntity)
+        var pawn = throwerHandle.Value!;
+        if (!pawn.IsValid || !pawn.IsValidEntity)
             return;
 
-        var player = _core.PlayerManager.GetPlayerFromPawn(pawn);
+        var player = pawn.ToPlayer();
         if (player == null || !player.IsValid)
             return;
 
@@ -802,11 +743,15 @@ public class HanZriotHelpers
         {
             _globals.ActiveFreezeGrenades.Remove(playerId);
 
-            if (!TryResolveCurrentPlayer(playerId, sessionId, roundGeneration, out var currentPlayer, requireAlive: true))
+            if (!IsRoundGenerationCurrent(roundGeneration))
+                return;
+
+            var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+            if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                 return;
 
             var currentController = currentPlayer.Controller;
-            if (currentController == null || !currentController.IsValid)
+            if (currentController == null || !currentController.IsValid || !currentController.PawnIsAlive)
                 return;
 
             if (!_globals.GameStart && currentController.TeamNum == (byte)Team.T)
@@ -1084,18 +1029,19 @@ public class HanZriotHelpers
     }
 
 
-    public void RespawnClient(CCSPlayerController Controller)
+    public void RespawnClient(CCSPlayerController controller)
     {
-        if (!Controller.IsValid || Controller.PawnIsAlive)
+        if (controller == null || !controller.IsValid || controller.PawnIsAlive)
             return;
 
-        Controller.Respawn();
+        controller.Respawn();
     }
 
     public void DeleSpawnProtect(IPlayer player) //删除重生保护
     {
         if (player == null || !player.IsValid)
             return;
+
         var pawn = player.PlayerPawn;
         if (pawn == null || !pawn.IsValid)
             return;
@@ -1205,7 +1151,7 @@ public class HanZriotHelpers
 
     public void SetFreezeState(IPlayer player, bool freeze)
     {
-        if (!player.IsValid)
+        if (player == null || !player.IsValid)
             return;
 
         var controller = player.Controller;
@@ -1213,7 +1159,8 @@ public class HanZriotHelpers
             return;
 
         var pawn = player.PlayerPawn;
-        if (pawn == null || !pawn.IsValid) return;
+        if (pawn == null || !pawn.IsValid)
+            return;
 
         var moveType = freeze ? MoveType_t.MOVETYPE_NONE : MoveType_t.MOVETYPE_WALK;
         pawn.MoveType = moveType;
@@ -1226,7 +1173,7 @@ public class HanZriotHelpers
         var allPlayers = _core.PlayerManager.GetAllPlayers();
         foreach (var player in allPlayers)
         {
-            if (player is not { IsValid: true })
+            if (player == null || !player.IsValid)
                 continue;
 
             var controller = player.Controller;
@@ -1263,7 +1210,10 @@ public class HanZriotHelpers
             {
                 try
                 {
-                    if (player is not { IsValid: true } || player.IsFakeClient)
+                    if (player == null || !player.IsValid)
+                        continue;
+
+                    if(player.IsFakeClient)
                         continue;
 
                     int playerId = player.PlayerID;
@@ -1292,16 +1242,19 @@ public class HanZriotHelpers
                     if (remaining <= 0)
                     {
                         int generation = expectedRoundGeneration;
+                        ulong sessionId = player.SessionId;
 
-                        _core.Scheduler.NextTick(() =>
+                        _core.Scheduler.NextWorldUpdate(() =>
                         {
                             if (!IsRoundGenerationCurrent(generation))
                                 return;
 
-                            if (player is not { IsValid: true } currentPlayer)
+                            var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+                            if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                                 return;
 
-                            if (currentPlayer.Controller is not { IsValid: true } currentController)
+                            var currentController = currentPlayer.Controller;
+                            if (currentController == null || !currentController.IsValid)
                                 return;
 
                             if (currentController.TeamNum != (byte)Team.CT || currentController.PawnIsAlive)

@@ -284,11 +284,11 @@ public class HanZriotService
 
     public string? GetCurrentZombieName(IPlayer player)
     {
-        if (player is not { IsValid: true })
+        if (player == null || !player.IsValid)
             return null;
 
         var controller = player.Controller;
-        if (controller is not { IsValid: true })
+        if (controller == null || !controller.IsValid)
             return null;
 
         if (controller.TeamNum != (byte)Team.T || !controller.PawnIsAlive)
@@ -415,11 +415,12 @@ public class HanZriotService
 
         foreach (var player in _core.PlayerManager.GetAllPlayers())
         {
-            if (player is not { IsValid: true })
+            if (player == null || !player.IsValid)
                 continue;
 
             var controller = player.Controller;
-            if (controller?.Entity is { IsValid: true } entity)
+            var entity = controller?.Entity;
+            if (entity != null && entity.EntityInstance is { IsValid: true, IsValidEntity: true })
             {
                 entity.Name = string.Empty;
             }
@@ -432,7 +433,7 @@ public class HanZriotService
         ResetRoundRuntimeState(clearPlayerRoundState: true, clearKillCounters: true);
         _globals.RiotDay = 1;
         _globals.AllowHumanZombie = false;
-        _core.Engine.ExecuteCommand("bot_quota 0");
+        //_core.Engine.ExecuteCommand("bot_quota 0");
     }
 
     public void ResetPluginRuntimeState()
@@ -442,18 +443,20 @@ public class HanZriotService
 
     public void ForcePlayerHuman(IPlayer player)
     {
-        if (player is not { IsValid: true })
+        if (player == null || !player.IsValid)
             return;
 
         var controller = player.Controller;
-        if (controller is not { IsValid: true })
+        if (controller == null || !controller.IsValid)
             return;
 
         var playerId = player.PlayerID;
+        ulong sessionId = player.SessionId;
         ResetPlayerRuntimeState(playerId, resetHudState: false);
         ResetPlayerCorpseModeToCurrentDay(playerId);
 
-        if (controller.Entity is { IsValid: true } entity)
+        var entity = controller.Entity;
+        if (entity != null && entity.EntityInstance is { IsValid: true, IsValidEntity: true })
         {
             entity.Name = string.Empty;
         }
@@ -469,10 +472,12 @@ public class HanZriotService
             if (!IsRoundGenerationCurrent(generation))
                 return;
 
-            if (player is not { IsValid: true } currentPlayer)
+            var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+            if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                 return;
 
-            if (currentPlayer.Controller is not { IsValid: true } currentController)
+            var currentController = currentPlayer.Controller;
+            if (currentController == null || !currentController.IsValid)
                 return;
 
             if (!currentController.PawnIsAlive)
@@ -484,14 +489,15 @@ public class HanZriotService
 
     public void ForcePlayerZombie(IPlayer player)
     {
-        if (player is not { IsValid: true })
+        if (player == null || !player.IsValid)
             return;
 
         var controller = player.Controller;
-        if (controller is not { IsValid: true })
+        if (controller == null || !controller.IsValid)
             return;
 
         int playerId = player.PlayerID;
+        ulong sessionId = player.SessionId;
         ResetPlayerRuntimeState(playerId, resetHudState: false);
         _globals.BeAZombie[playerId] = -1;
 
@@ -506,10 +512,12 @@ public class HanZriotService
             if (!IsRoundGenerationCurrent(generation))
                 return;
 
-            if (player is not { IsValid: true } currentPlayer)
+            var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
+            if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                 return;
 
-            if (currentPlayer.Controller is not { IsValid: true } currentController)
+            var currentController = currentPlayer.Controller;
+            if (currentController == null || !currentController.IsValid)
                 return;
 
             if (!currentController.PawnIsAlive)
@@ -524,15 +532,15 @@ public class HanZriotService
 
     public void PossZombie(IPlayer client)
     {
-        if (client is not { IsValid: true })
+        if (client == null || !client.IsValid)
             return;
 
         var clientPawn = client.PlayerPawn;
-        if (clientPawn is not { IsValid: true })
+        if (clientPawn == null || !clientPawn.IsValid)
             return;
 
         var controller = client.Controller;
-        if (controller is not { IsValid: true })
+        if (controller == null || !controller.IsValid)
             return;
 
         ChangeKnife(client);
@@ -594,7 +602,8 @@ public class HanZriotService
             };
         }
 
-        if (controller.Entity is { IsValid: true } controllerEntity)
+        var controllerEntity = controller.Entity;
+        if (controllerEntity != null && controllerEntity.EntityInstance is { IsValid: true, IsValidEntity: true })
         {
             controllerEntity.Name = randomZombie.Name;
         }
