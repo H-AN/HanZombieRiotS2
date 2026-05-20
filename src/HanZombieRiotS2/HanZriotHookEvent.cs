@@ -580,7 +580,6 @@ public class HanZriotEvents
 
         int playerId = player.PlayerID;
         ulong sessionId = player.SessionId;
-        int roundGeneration = _helpers.GetCurrentRoundGeneration();
         var CFG = _mainConfig.CurrentValue;
 
         if (!player.IsFakeClient)
@@ -596,9 +595,6 @@ public class HanZriotEvents
 
                 _core.Scheduler.DelayBySeconds(0.1f, () =>
                 {
-                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
-                        return;
-
                     var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
                     if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                         return;
@@ -610,7 +606,7 @@ public class HanZriotEvents
                 {
                     _core.Scheduler.DelayBySeconds(0.5f, () =>
                     {
-                        if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                        if (_globals.GameStart)
                             return;
 
                         var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
@@ -634,9 +630,6 @@ public class HanZriotEvents
 
             _core.Scheduler.DelayBySeconds(0.1f, () =>
             {
-                if (!_services.IsRoundGenerationCurrent(roundGeneration))
-                    return;
-
                 var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
                 if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                     return;
@@ -654,9 +647,6 @@ public class HanZriotEvents
             {
                 _core.Scheduler.DelayBySeconds(0.2f, () =>
                 {
-                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
-                        return;
-
                     var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
                     if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                         return;
@@ -672,9 +662,6 @@ public class HanZriotEvents
                 _globals.SpawnProtect[playerId] = null;
                 _globals.SpawnProtect[playerId] = _core.Scheduler.DelayBySeconds(CFG.SpawnProtectCount, () =>
                 {
-                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
-                        return;
-
                     var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
                     if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                         return;
@@ -688,9 +675,6 @@ public class HanZriotEvents
             {
                 _core.Scheduler.NextWorldUpdate(() =>
                 {
-                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
-                        return;
-
                     var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
                     if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                         return;
@@ -710,11 +694,8 @@ public class HanZriotEvents
             {
                 player.SwitchTeam(Team.T);
             }
-            _core.Scheduler.DelayBySeconds(0.05f, () =>
+            _core.Scheduler.DelayBySeconds(0.1f, () =>
             {
-                if (!_services.IsRoundGenerationCurrent(roundGeneration))
-                    return;
-
                 var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
                 if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SessionId != sessionId)
                     return;
@@ -725,7 +706,7 @@ public class HanZriotEvents
             {
                 _core.Scheduler.DelayBySeconds(0.5f, () =>
                 {
-                    if (!_services.IsRoundGenerationCurrent(roundGeneration))
+                    if (_globals.GameStart)
                         return;
 
                     var currentPlayer = _core.PlayerManager.GetPlayer(playerId);
