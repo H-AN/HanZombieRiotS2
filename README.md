@@ -286,8 +286,7 @@ bot_join_team T and mp_limitteams 0
 
 You may use the plugin with the following workshop resources:
 ```
-sounds : 3644652779
-zombie models : 3718944950 
+3738328082
 
 To use Workshop resources, your server must install the Metamod plugin: multiaddonmanager
 
