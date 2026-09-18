@@ -60,8 +60,7 @@ https://github.com/H-AN/HanZombieSounds
 
 插件可结合以下创意工坊资源使用（示例）：
 ```
-音效 : 3644652779
-丧尸模型 : 3718944950
+3738328082
 
 要使用创意工坊资源,需要服务器安装metamod插件 multiaddonmanager 来管理服务器和玩家使用下载和安装创意工坊资源
 
