@@ -5,7 +5,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Events;
+using SwiftlyS2.Shared.Misc;
 using SwiftlyS2.Shared.Plugins;
+using SwiftlyS2.Shared.ProtobufDefinitions;
 using SwiftlyS2.Shared.SchemaDefinitions;
 
 
@@ -13,7 +15,7 @@ namespace HanZombieRiotS2;
 
 [PluginMetadata(
     Id = "HanZombieRiotS2",
-    Version = "4.3.0",
+    Version = "4.3.1",
     Name = "僵尸暴动 for Sw2/HanZombieRiotS2",
     Author = "H-AN",
     Description = "CS2僵尸暴动 SW2版本 CS2 zombieriot for SW2.")]
@@ -31,8 +33,11 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
     private HanZriotGlobals _Globals = null!;
     private HanZriotCommands _Commands = null!;
     private HanZriotService _Services = null!;
+    private Guid _messageHook;
     public override void Load(bool hotReload)
     {
+        if (_messageHook == Guid.Empty)
+            _messageHook = Core.NetMessage.HookServerMessage<CMsgPlaceDecalEvent>(_ => HookResult.Stop);
 
         Core.Configuration.InitializeJsonWithModel<HanZriotCFG>("HanZriotCFG.jsonc", "ZriotCFG").Configure(builder =>
         {
@@ -94,6 +99,12 @@ public partial class HanZombieRiotS2(ISwiftlyCore core) : BasePlugin(core)
 
     public override void Unload()
     {
+        if (_messageHook != Guid.Empty)
+        {
+            Core.NetMessage.Unhook(_messageHook);
+            _messageHook = Guid.Empty;
+        }
+
         Core.Event.OnMapLoad -= Event_OnMapLoad;
         _Services.ResetPluginRuntimeState();
         ServiceProvider!.Dispose();
